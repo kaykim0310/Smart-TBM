@@ -1,7 +1,7 @@
 import streamlit as st
 
 # URL 맨 뒤에 보이지 않는 공백을 제거한 올바른 주소입니다.
-html_url = "https://raw.githubusercontent.com/kaykim0310/Smart-TBM/main/Smart-TBM.html"
+html_url = "https://kaykim0310.github.io/Smart-TBM/Smart-TBM.html"
 
 # Streamlit 앱 제목 설정
 st.title("GitHub HTML 파일 표시하기")
