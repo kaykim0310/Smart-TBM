@@ -343,6 +343,43 @@
             animation: pulse 1.5s infinite;
         }
         
+        /* 개선된 음성 인식 스타일 */
+        .voice-reconnect-notice {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+            color: #0c5460;
+            font-size: 13px;
+        }
+        
+        .voice-reconnect-notice.show {
+            display: block;
+        }
+        
+        .voice-error-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .voice-btn-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        
         /* WorkTalk 카드 스타일 */
         .worktalk-cards {
             display: grid;
@@ -595,6 +632,12 @@
             background: #fff3cd;
             border-color: #ffeaa7;
             color: #856404;
+        }
+        
+        .notice-box.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
         }
         
         /* AI 분석 결과 박스 */
@@ -1085,21 +1128,28 @@
                     <strong>🎙️ AI 음성 회의록 기능</strong><br>
                     • TBM 미팅을 녹음하면서 실시간으로 중요 내용을 자동 추출합니다<br>
                     • "위험요인", "작업내용", "주의사항" 등 키워드를 자동으로 인식합니다<br>
-                    • 참석자별 발언을 구분하여 기록합니다<br><br>
-                    <strong>📱 모바일 사용 시:</strong><br>
-                    • Chrome 브라우저 권장 (iOS는 Safari)<br>
-                    • 마이크 권한 문제 시 "마이크 테스트" 버튼 클릭<br>
-                    • 시크릿 모드에서 시도하면 권한 재요청 가능
+                    • 참석자별 발언을 구분하여 기록합니다
+                </div>
+                
+                <div class="notice-box success" id="voicePermissionStatus" style="display: none;">
+                    ✅ 마이크 권한이 허용되었습니다. 음성 인식이 자동으로 재연결됩니다.
                 </div>
                 
                 <div class="voice-controls">
-                    <button class="voice-btn record" id="meetingRecordBtn" onclick="toggleMeetingRecording()">
-                        <span>🎙️</span> 회의 녹음 시작
-                    </button>
+                    <div class="voice-btn-wrapper">
+                        <button class="voice-btn record" id="meetingRecordBtn" onclick="toggleMeetingRecording()">
+                            <span>🎙️</span> 회의 녹음 시작
+                        </button>
+                        <span class="voice-error-count" id="meetingErrorCount" style="display: none;">0</span>
+                    </div>
                     <div class="voice-status" id="meetingStatus">준비됨</div>
                     <button class="btn btn-warning" onclick="testMicrophone()" style="margin-left: auto;">
                         🔧 마이크 테스트
                     </button>
+                </div>
+                
+                <div class="voice-reconnect-notice" id="meetingReconnectNotice">
+                    🔄 음성 인식이 중단되었습니다. 자동으로 재연결 중...
                 </div>
                 
                 <div class="form-section">
@@ -1129,12 +1179,15 @@
                 <div class="voice-memo-box">
                     <h3>🗣️ 음성으로 위험성평가 작성하기</h3>
                     <p>현장에서 음성으로 말하면 AI가 자동으로 위험성평가를 작성합니다</p>
-                    <button class="voice-memo-btn" id="voiceMemoBtn" onclick="toggleVoiceMemo()">
-                        <span>🎤</span> 음성 메모 시작
-                    </button>
+                    <div class="voice-btn-wrapper">
+                        <button class="voice-memo-btn" id="voiceMemoBtn" onclick="toggleVoiceMemo()">
+                            <span>🎤</span> 음성 메모 시작
+                        </button>
+                        <span class="voice-error-count" id="memoErrorCount" style="display: none;">0</span>
+                    </div>
                     <div id="voiceMemoStatus" style="margin-top: 10px; font-style: italic; color: #666;"></div>
-                    <div style="margin-top: 10px; font-size: 12px; color: #999;">
-                        💡 팁: 권한 문제 시 Chrome 시크릿 모드에서 다시 시도하세요
+                    <div class="voice-reconnect-notice" id="memoReconnectNotice">
+                        🔄 음성 인식이 중단되었습니다. 자동으로 재연결 중...
                     </div>
                 </div>
                 
@@ -1274,6 +1327,15 @@
         let meetingStartTime = null;
         let currentSpeaker = null;
         
+        // 개선된 음성 인식 변수
+        let recognitionErrorCount = 0;
+        let memoErrorCount = 0;
+        let isReconnecting = false;
+        let reconnectTimeout = null;
+        let silenceTimeout = null;
+        let lastSpeechTime = null;
+        let permissionGranted = false;
+        
         // 로컬 스토리지 키
         const STORAGE_KEY = 'tbm_sessions';
         
@@ -1292,9 +1354,9 @@
             action: ['주의', '확인', '점검', '착용', '설치', '차단', '격리', '표시', '교육', '준수']
         };
         
-        // 음성 인식 초기화
+        // 개선된 음성 인식 초기화
         function initializeSpeechRecognition() {
-            console.log('음성 인식 초기화 시작...');
+            console.log('개선된 음성 인식 초기화 시작...');
             
             // 브라우저 지원 확인
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -1318,22 +1380,45 @@
             recognition.lang = 'ko-KR';  // 한국어
             recognition.maxAlternatives = 1;  // 대안 결과 1개
             
+            // 개선된 이벤트 핸들러
             recognition.onstart = function() {
                 console.log('✅ 음성 인식이 시작되었습니다');
+                lastSpeechTime = Date.now();
                 showUpdateIndicator('음성 인식이 시작되었습니다');
+                
+                // 권한이 허용되면 표시
+                if (!permissionGranted) {
+                    permissionGranted = true;
+                    document.getElementById('voicePermissionStatus').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('voicePermissionStatus').style.display = 'none';
+                    }, 5000);
+                }
             };
             
             recognition.onresult = handleSpeechResult;
-            recognition.onerror = handleSpeechError;
-            recognition.onend = handleSpeechEnd;
+            recognition.onerror = handleImprovedSpeechError;
+            recognition.onend = handleImprovedSpeechEnd;
             
-            console.log('✅ 음성 인식 초기화 완료');
+            console.log('✅ 개선된 음성 인식 초기화 완료');
             return true;
         }
         
-        // 음성 인식 결과 처리
+        // 개선된 음성 인식 결과 처리
         function handleSpeechResult(event) {
             console.log('음성 인식 이벤트 발생:', event);
+            
+            // 마지막 음성 시간 업데이트
+            lastSpeechTime = Date.now();
+            
+            // 오류 카운트 리셋
+            if (isMeetingRecording) {
+                recognitionErrorCount = 0;
+                updateErrorCount('meeting', 0);
+            } else if (isVoiceMemoRecording) {
+                memoErrorCount = 0;
+                updateErrorCount('memo', 0);
+            }
             
             if (!event.results || event.results.length === 0) {
                 console.log('음성 인식 결과가 없습니다');
@@ -1360,6 +1445,138 @@
                     showInterimTranscript(transcript);
                 } else if (isVoiceMemoRecording) {
                     updateVoiceMemoStatus(`듣는 중: ${transcript}`);
+                }
+            }
+        }
+        
+        // 개선된 음성 인식 오류 처리
+        function handleImprovedSpeechError(event) {
+            console.error('음성 인식 오류:', event.error);
+            
+            let errorMessage = '음성 인식 오류: ';
+            let shouldReconnect = false;
+            
+            switch(event.error) {
+                case 'no-speech':
+                    errorMessage += '음성이 감지되지 않았습니다.';
+                    shouldReconnect = true;
+                    break;
+                case 'audio-capture':
+                    errorMessage += '마이크를 찾을 수 없습니다.';
+                    break;
+                case 'not-allowed':
+                    errorMessage += '마이크 권한이 거부되었습니다.';
+                    permissionGranted = false;
+                    // 녹음 중지
+                    if (isMeetingRecording) {
+                        toggleMeetingRecording();
+                    }
+                    if (isVoiceMemoRecording) {
+                        toggleVoiceMemo();
+                    }
+                    break;
+                case 'aborted':
+                    errorMessage += '음성 인식이 중단되었습니다.';
+                    shouldReconnect = true;
+                    break;
+                case 'network':
+                    errorMessage += '네트워크 오류입니다.';
+                    shouldReconnect = true;
+                    break;
+                default:
+                    errorMessage += event.error;
+                    shouldReconnect = true;
+            }
+            
+            // 오류 카운트 증가
+            if (isMeetingRecording) {
+                recognitionErrorCount++;
+                updateErrorCount('meeting', recognitionErrorCount);
+                updateMeetingStatus(errorMessage);
+            } else if (isVoiceMemoRecording) {
+                memoErrorCount++;
+                updateErrorCount('memo', memoErrorCount);
+                updateVoiceMemoStatus(errorMessage);
+            }
+            
+            // 자동 재연결
+            if (shouldReconnect && (isMeetingRecording || isVoiceMemoRecording)) {
+                attemptReconnect();
+            }
+        }
+        
+        // 개선된 음성 인식 종료 처리
+        function handleImprovedSpeechEnd() {
+            console.log('음성 인식 종료 이벤트 발생');
+            
+            if (isMeetingRecording || isVoiceMemoRecording) {
+                // 자동 재연결
+                attemptReconnect();
+            }
+        }
+        
+        // 자동 재연결 함수
+        function attemptReconnect() {
+            if (isReconnecting) return;
+            
+            isReconnecting = true;
+            
+            // 재연결 알림 표시
+            if (isMeetingRecording) {
+                document.getElementById('meetingReconnectNotice').classList.add('show');
+                updateMeetingStatus('🔄 재연결 중...');
+            } else if (isVoiceMemoRecording) {
+                document.getElementById('memoReconnectNotice').classList.add('show');
+                updateVoiceMemoStatus('🔄 재연결 중...');
+            }
+            
+            // 재연결 시도
+            reconnectTimeout = setTimeout(() => {
+                try {
+                    recognition.start();
+                    console.log('음성 인식 재연결 시도');
+                    
+                    // 재연결 성공 시 알림 숨기기
+                    setTimeout(() => {
+                        isReconnecting = false;
+                        document.getElementById('meetingReconnectNotice').classList.remove('show');
+                        document.getElementById('memoReconnectNotice').classList.remove('show');
+                        
+                        if (isMeetingRecording) {
+                            updateMeetingStatus('🎤 녹음 중... (재연결됨)');
+                        } else if (isVoiceMemoRecording) {
+                            updateVoiceMemoStatus('말씀해주세요... (재연결됨)');
+                        }
+                    }, 1000);
+                } catch (e) {
+                    console.error('음성 인식 재연결 실패:', e);
+                    isReconnecting = false;
+                    
+                    // 재연결 실패 시 다시 시도
+                    if (isMeetingRecording || isVoiceMemoRecording) {
+                        attemptReconnect();
+                    }
+                }
+            }, 1000);
+        }
+        
+        // 오류 카운트 표시 업데이트
+        function updateErrorCount(type, count) {
+            if (type === 'meeting') {
+                const errorEl = document.getElementById('meetingErrorCount');
+                if (count > 0) {
+                    errorEl.textContent = count;
+                    errorEl.style.display = 'flex';
+                } else {
+                    errorEl.style.display = 'none';
+                }
+            } else if (type === 'memo') {
+                const errorEl = document.getElementById('memoErrorCount');
+                if (count > 0) {
+                    errorEl.textContent = count;
+                    errorEl.style.display = 'flex';
+                } else {
+                    errorEl.style.display = 'none';
                 }
             }
         }
@@ -1648,7 +1865,7 @@
             container.appendChild(item);
         }
         
-        // 회의 녹음 토글
+        // 개선된 회의 녹음 토글
         async function toggleMeetingRecording() {
             if (!recognition && !initializeSpeechRecognition()) {
                 return;
@@ -1658,18 +1875,7 @@
             
             if (!isMeetingRecording) {
                 try {
-                    // 먼저 권한 상태 확인
-                    if (navigator.permissions && navigator.permissions.query) {
-                        const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
-                        console.log('마이크 권한 상태:', permissionStatus.state);
-                        
-                        if (permissionStatus.state === 'denied') {
-                            alert('마이크 권한이 차단되어 있습니다.\n\n📱 해결 방법:\n1. 핸드폰 설정 앱 열기\n2. 앱 → Chrome → 권한\n3. 마이크 켜기\n\n또는 시크릿 모드에서 다시 시도해보세요!');
-                            return;
-                        }
-                    }
-                    
-                    // 마이크 권한 요청 (이 부분에서 팝업이 나타나야 함)
+                    // 권한 요청
                     const stream = await navigator.mediaDevices.getUserMedia({ 
                         audio: {
                             echoCancellation: true,
@@ -1678,12 +1884,15 @@
                         } 
                     });
                     
-                    // 스트림 정리 (권한만 확인하고 실제 녹음은 음성인식 API가 처리)
+                    // 스트림 정리
                     stream.getTracks().forEach(track => track.stop());
                     
                     // 녹음 시작
                     isMeetingRecording = true;
                     meetingStartTime = new Date();
+                    recognitionErrorCount = 0;
+                    updateErrorCount('meeting', 0);
+                    
                     btn.classList.add('recording');
                     btn.innerHTML = '<span>⏹️</span> 녹음 중지';
                     updateMeetingStatus('🎤 녹음 중... (말씀해주세요)');
@@ -1693,27 +1902,10 @@
                     console.log('음성 인식 시작됨');
                     
                     // 사용자에게 안내
-                    showUpdateIndicator('마이크가 활성화되었습니다. 말씀해주세요.');
+                    showUpdateIndicator('마이크가 활성화되었습니다. 계속 말씀해주세요.');
                 } catch (error) {
                     console.error('마이크 접근 오류:', error);
-                    
-                    // 더 친절한 오류 메시지
-                    let errorMsg = '마이크 접근 오류:\n\n';
-                    
-                    if (error.name === 'NotAllowedError') {
-                        errorMsg += '📱 권한이 차단되었습니다.\n\n';
-                        errorMsg += '해결 방법:\n';
-                        errorMsg += '1. Chrome 시크릿 모드에서 다시 시도\n';
-                        errorMsg += '2. 또는 핸드폰 설정 → 앱 → Chrome → 권한 → 마이크 ON';
-                    } else if (error.name === 'NotFoundError') {
-                        errorMsg += '마이크를 찾을 수 없습니다.\n';
-                        errorMsg += '이어폰을 연결하거나 마이크 연결을 확인하세요.';
-                    } else {
-                        errorMsg += error.message;
-                    }
-                    
-                    alert(errorMsg);
-                    updateMeetingStatus('마이크 사용 불가');
+                    handleMicrophoneError(error);
                 }
             } else {
                 // 녹음 중지
@@ -1722,8 +1914,17 @@
                 btn.innerHTML = '<span>🎙️</span> 회의 녹음 시작';
                 updateMeetingStatus('녹음 완료');
                 
+                // 재연결 타임아웃 클리어
+                if (reconnectTimeout) {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = null;
+                }
+                
                 recognition.stop();
                 console.log('음성 인식 중지됨');
+                
+                // 알림 숨기기
+                document.getElementById('meetingReconnectNotice').classList.remove('show');
                 
                 // 임시 텍스트 제거
                 const interimDiv = document.getElementById('interimTranscript');
@@ -1733,7 +1934,7 @@
             }
         }
         
-        // 음성 메모 토글
+        // 개선된 음성 메모 토글
         async function toggleVoiceMemo() {
             if (!recognition && !initializeSpeechRecognition()) {
                 return;
@@ -1743,18 +1944,7 @@
             
             if (!isVoiceMemoRecording) {
                 try {
-                    // 먼저 권한 상태 확인
-                    if (navigator.permissions && navigator.permissions.query) {
-                        const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
-                        console.log('마이크 권한 상태:', permissionStatus.state);
-                        
-                        if (permissionStatus.state === 'denied') {
-                            alert('마이크 권한이 차단되어 있습니다.\n\n📱 해결 방법:\n1. 핸드폰 설정 앱 열기\n2. 앱 → Chrome → 권한\n3. 마이크 켜기\n\n또는 시크릿 모드에서 다시 시도해보세요!');
-                            return;
-                        }
-                    }
-                    
-                    // 마이크 권한 요청
+                    // 권한 요청
                     const stream = await navigator.mediaDevices.getUserMedia({ 
                         audio: {
                             echoCancellation: true,
@@ -1768,6 +1958,9 @@
                     
                     // 녹음 시작
                     isVoiceMemoRecording = true;
+                    memoErrorCount = 0;
+                    updateErrorCount('memo', 0);
+                    
                     btn.classList.add('recording');
                     btn.innerHTML = '<span>⏹️</span> 녹음 중지';
                     updateVoiceMemoStatus('말씀해주세요...');
@@ -1778,23 +1971,7 @@
                     showUpdateIndicator('음성 메모가 시작되었습니다. 위험 상황을 설명해주세요.');
                 } catch (error) {
                     console.error('마이크 접근 오류:', error);
-                    
-                    let errorMsg = '마이크 접근 오류:\n\n';
-                    
-                    if (error.name === 'NotAllowedError') {
-                        errorMsg += '📱 권한이 차단되었습니다.\n\n';
-                        errorMsg += '해결 방법:\n';
-                        errorMsg += '1. Chrome 시크릿 모드에서 다시 시도\n';
-                        errorMsg += '2. 또는 핸드폰 설정 → 앱 → Chrome → 권한 → 마이크 ON';
-                    } else if (error.name === 'NotFoundError') {
-                        errorMsg += '마이크를 찾을 수 없습니다.\n';
-                        errorMsg += '이어폰을 연결하거나 마이크 연결을 확인하세요.';
-                    } else {
-                        errorMsg += error.message;
-                    }
-                    
-                    alert(errorMsg);
-                    updateVoiceMemoStatus('마이크 사용 불가');
+                    handleMicrophoneError(error);
                 }
             } else {
                 // 녹음 중지
@@ -1803,75 +1980,37 @@
                 btn.innerHTML = '<span>🎤</span> 음성 메모 시작';
                 updateVoiceMemoStatus('녹음 완료');
                 
+                // 재연결 타임아웃 클리어
+                if (reconnectTimeout) {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = null;
+                }
+                
                 recognition.stop();
                 console.log('음성 메모 중지됨');
+                
+                // 알림 숨기기
+                document.getElementById('memoReconnectNotice').classList.remove('show');
             }
         }
         
-        // 음성 인식 오류 처리
-        function handleSpeechError(event) {
-            console.error('음성 인식 오류:', event.error);
+        // 마이크 오류 처리 통합 함수
+        function handleMicrophoneError(error) {
+            let errorMsg = '마이크 접근 오류:\n\n';
             
-            let errorMessage = '음성 인식 오류: ';
-            switch(event.error) {
-                case 'no-speech':
-                    errorMessage += '음성이 감지되지 않았습니다. 마이크 가까이에서 말씀해주세요.';
-                    // 자동 재시작
-                    if (isMeetingRecording || isVoiceMemoRecording) {
-                        setTimeout(() => {
-                            recognition.start();
-                            console.log('음성 인식 재시작');
-                        }, 1000);
-                    }
-                    break;
-                case 'audio-capture':
-                    errorMessage += '마이크를 찾을 수 없습니다. 마이크 연결을 확인해주세요.';
-                    break;
-                case 'not-allowed':
-                    errorMessage += '마이크 권한이 거부되었습니다. 브라우저 설정에서 허용해주세요.';
-                    // 녹음 중지
-                    if (isMeetingRecording) {
-                        toggleMeetingRecording();
-                    }
-                    if (isVoiceMemoRecording) {
-                        toggleVoiceMemo();
-                    }
-                    break;
-                case 'aborted':
-                    errorMessage += '다른 앱이 마이크를 사용 중입니다.';
-                    break;
-                case 'network':
-                    errorMessage += '네트워크 오류입니다. 인터넷 연결을 확인해주세요.';
-                    break;
-                default:
-                    errorMessage += event.error;
+            if (error.name === 'NotAllowedError') {
+                errorMsg += '📱 권한이 차단되었습니다.\n\n';
+                errorMsg += '해결 방법:\n';
+                errorMsg += '1. Chrome 시크릿 모드에서 다시 시도\n';
+                errorMsg += '2. 또는 핸드폰 설정 → 앱 → Chrome → 권한 → 마이크 ON';
+            } else if (error.name === 'NotFoundError') {
+                errorMsg += '마이크를 찾을 수 없습니다.\n';
+                errorMsg += '이어폰을 연결하거나 마이크 연결을 확인하세요.';
+            } else {
+                errorMsg += error.message;
             }
             
-            if (isMeetingRecording) {
-                updateMeetingStatus(errorMessage);
-            } else if (isVoiceMemoRecording) {
-                updateVoiceMemoStatus(errorMessage);
-            }
-            
-            showUpdateIndicator(errorMessage);
-        }
-        
-        // 음성 인식 종료 처리
-        function handleSpeechEnd() {
-            console.log('음성 인식 종료 이벤트 발생');
-            
-            if (isMeetingRecording || isVoiceMemoRecording) {
-                // 계속 녹음 중이면 재시작
-                console.log('녹음 중이므로 음성 인식 재시작...');
-                setTimeout(() => {
-                    try {
-                        recognition.start();
-                        console.log('음성 인식 재시작됨');
-                    } catch (e) {
-                        console.error('음성 인식 재시작 실패:', e);
-                    }
-                }, 500);
-            }
+            alert(errorMsg);
         }
         
         // 상태 업데이트 함수들
@@ -1885,6 +2024,8 @@
                 statusEl.style.fontWeight = 'bold';
             } else if (message.includes('오류') || message.includes('차단')) {
                 statusEl.style.color = '#dc3545';
+            } else if (message.includes('재연결')) {
+                statusEl.style.color = '#ffc107';
             } else {
                 statusEl.style.color = '#333';
                 statusEl.style.fontWeight = 'normal';
@@ -1900,6 +2041,8 @@
                 statusEl.style.color = '#28a745';
             } else if (message.includes('오류') || message.includes('차단')) {
                 statusEl.style.color = '#dc3545';
+            } else if (message.includes('재연결')) {
+                statusEl.style.color = '#ffc107';
             } else {
                 statusEl.style.color = '#666';
             }
