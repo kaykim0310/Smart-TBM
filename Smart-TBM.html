@@ -271,6 +271,13 @@
             font-size: 14px;
         }
         
+        .recording-timer {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+            color: #ff4444;
+        }
+        
         .transcript-box {
             background: #f8f9fa;
             border: 1px solid #ddd;
@@ -343,41 +350,78 @@
             animation: pulse 1.5s infinite;
         }
         
-        /* 개선된 음성 인식 스타일 */
-        .voice-reconnect-notice {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
+        /* API 키 설정 박스 */
+        .api-key-box {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .api-key-box h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .api-key-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+        
+        .api-key-status {
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        
+        .api-key-status.saved {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .api-key-status.not-saved {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* 업로드 진행 표시 */
+        .upload-progress {
+            display: none;
+            background: #f0f0f0;
             border-radius: 5px;
             padding: 10px;
             margin-top: 10px;
-            display: none;
-            color: #0c5460;
-            font-size: 13px;
         }
         
-        .voice-reconnect-notice.show {
+        .upload-progress.show {
             display: block;
         }
         
-        .voice-error-count {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #dc3545;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
+        .progress-bar {
+            background: #e0e0e0;
             height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: bold;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 5px;
         }
         
-        .voice-btn-wrapper {
-            position: relative;
-            display: inline-block;
+        .progress-fill {
+            background: #4caf50;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            font-size: 12px;
+            text-align: center;
+            color: #666;
         }
         
         /* WorkTalk 카드 스타일 */
@@ -719,7 +763,8 @@
             .notice-box,
             .voice-controls,
             .transcript-box,
-            .voice-memo-box {
+            .voice-memo-box,
+            .api-key-box {
                 display: none !important;
             }
             
@@ -1124,32 +1169,43 @@
             
             <!-- 음성 회의록 탭 -->
             <div class="tab-content" id="voiceTab">
-                <div class="notice-box">
-                    <strong>🎙️ AI 음성 회의록 기능</strong><br>
-                    • TBM 미팅을 녹음하면서 실시간으로 중요 내용을 자동 추출합니다<br>
-                    • "위험요인", "작업내용", "주의사항" 등 키워드를 자동으로 인식합니다<br>
-                    • 참석자별 발언을 구분하여 기록합니다
+                <div class="api-key-box">
+                    <h4>🔑 OpenAI API 키 설정</h4>
+                    <p style="font-size: 13px; margin-bottom: 10px;">
+                        음성 인식을 위해 OpenAI API 키가 필요합니다. 
+                        <a href="https://platform.openai.com/api-keys" target="_blank" style="color: #1976d2;">여기서 키 발급</a>
+                    </p>
+                    <input type="password" id="apiKeyInput" class="api-key-input" placeholder="sk-..." onchange="saveApiKey()">
+                    <button class="btn btn-primary" onclick="testApiKey()">API 키 테스트</button>
+                    <span class="api-key-status not-saved" id="apiKeyStatus">API 키 미설정</span>
                 </div>
                 
-                <div class="notice-box success" id="voicePermissionStatus" style="display: none;">
-                    ✅ 마이크 권한이 허용되었습니다. 음성 인식이 자동으로 재연결됩니다.
+                <div class="notice-box">
+                    <strong>🎙️ Whisper AI 음성 회의록 기능</strong><br>
+                    • OpenAI의 Whisper를 사용하여 안정적인 한국어 음성 인식<br>
+                    • 최대 5분까지 연속 녹음 가능 (끊김 없음)<br>
+                    • 녹음 후 자동으로 텍스트 변환 및 분석<br>
+                    • "위험요인", "작업내용", "주의사항" 등 키워드 자동 추출
                 </div>
                 
                 <div class="voice-controls">
-                    <div class="voice-btn-wrapper">
-                        <button class="voice-btn record" id="meetingRecordBtn" onclick="toggleMeetingRecording()">
-                            <span>🎙️</span> 회의 녹음 시작
-                        </button>
-                        <span class="voice-error-count" id="meetingErrorCount" style="display: none;">0</span>
+                    <button class="voice-btn record" id="meetingRecordBtn" onclick="toggleMeetingRecording()">
+                        <span>🎙️</span> 회의 녹음 시작
+                    </button>
+                    <div class="voice-status" id="meetingStatus">
+                        준비됨
+                        <span class="recording-timer" id="recordingTimer" style="display: none;">00:00</span>
                     </div>
-                    <div class="voice-status" id="meetingStatus">준비됨</div>
                     <button class="btn btn-warning" onclick="testMicrophone()" style="margin-left: auto;">
                         🔧 마이크 테스트
                     </button>
                 </div>
                 
-                <div class="voice-reconnect-notice" id="meetingReconnectNotice">
-                    🔄 음성 인식이 중단되었습니다. 자동으로 재연결 중...
+                <div class="upload-progress" id="uploadProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">음성 파일 처리 중...</div>
                 </div>
                 
                 <div class="form-section">
@@ -1179,16 +1235,11 @@
                 <div class="voice-memo-box">
                     <h3>🗣️ 음성으로 위험성평가 작성하기</h3>
                     <p>현장에서 음성으로 말하면 AI가 자동으로 위험성평가를 작성합니다</p>
-                    <div class="voice-btn-wrapper">
-                        <button class="voice-memo-btn" id="voiceMemoBtn" onclick="toggleVoiceMemo()">
-                            <span>🎤</span> 음성 메모 시작
-                        </button>
-                        <span class="voice-error-count" id="memoErrorCount" style="display: none;">0</span>
-                    </div>
+                    <button class="voice-memo-btn" id="voiceMemoBtn" onclick="toggleVoiceMemo()">
+                        <span>🎤</span> 음성 메모 시작
+                    </button>
                     <div id="voiceMemoStatus" style="margin-top: 10px; font-style: italic; color: #666;"></div>
-                    <div class="voice-reconnect-notice" id="memoReconnectNotice">
-                        🔄 음성 인식이 중단되었습니다. 자동으로 재연결 중...
-                    </div>
+                    <div class="recording-timer" id="memoTimer" style="display: none;">00:00</div>
                 </div>
                 
                 <h2>위험성평가 작성</h2>
@@ -1320,24 +1371,21 @@
             version: 0
         };
         
-        // 음성 인식 관련 변수
-        let recognition = null;
+        // 음성 녹음 관련 변수
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingStartTime = null;
+        let recordingTimer = null;
         let isMeetingRecording = false;
         let isVoiceMemoRecording = false;
-        let meetingStartTime = null;
         let currentSpeaker = null;
         
-        // 개선된 음성 인식 변수
-        let recognitionErrorCount = 0;
-        let memoErrorCount = 0;
-        let isReconnecting = false;
-        let reconnectTimeout = null;
-        let silenceTimeout = null;
-        let lastSpeechTime = null;
-        let permissionGranted = false;
+        // API 키
+        let OPENAI_API_KEY = '';
         
         // 로컬 스토리지 키
         const STORAGE_KEY = 'tbm_sessions';
+        const API_KEY_STORAGE = 'tbm_openai_api_key';
         
         // 디버그 모드
         let debugMode = false;
@@ -1354,269 +1402,242 @@
             action: ['주의', '확인', '점검', '착용', '설치', '차단', '격리', '표시', '교육', '준수']
         };
         
-        // 개선된 음성 인식 초기화
-        function initializeSpeechRecognition() {
-            console.log('개선된 음성 인식 초기화 시작...');
-            
-            // 브라우저 지원 확인
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                const msg = '❌ 음성 인식 미지원 브라우저\n\n' +
-                           '지원 브라우저:\n' +
-                           '• PC: Chrome, Edge\n' +
-                           '• Android: Chrome\n' +
-                           '• iOS: Safari (Chrome X)\n\n' +
-                           '현재 브라우저를 확인해주세요!';
-                alert(msg);
-                console.error('음성 인식 API 미지원');
-                return false;
+        // 페이지 로드 시 API 키 확인
+        window.addEventListener('load', function() {
+            const savedApiKey = localStorage.getItem(API_KEY_STORAGE);
+            if (savedApiKey) {
+                OPENAI_API_KEY = savedApiKey;
+                document.getElementById('apiKeyInput').value = savedApiKey;
+                updateApiKeyStatus(true);
             }
-            
-            console.log('✅ 음성 인식 API 지원 확인');
-            
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;  // 계속 듣기
-            recognition.interimResults = true;  // 중간 결과 표시
-            recognition.lang = 'ko-KR';  // 한국어
-            recognition.maxAlternatives = 1;  // 대안 결과 1개
-            
-            // 개선된 이벤트 핸들러
-            recognition.onstart = function() {
-                console.log('✅ 음성 인식이 시작되었습니다');
-                lastSpeechTime = Date.now();
-                showUpdateIndicator('음성 인식이 시작되었습니다');
-                
-                // 권한이 허용되면 표시
-                if (!permissionGranted) {
-                    permissionGranted = true;
-                    document.getElementById('voicePermissionStatus').style.display = 'block';
-                    setTimeout(() => {
-                        document.getElementById('voicePermissionStatus').style.display = 'none';
-                    }, 5000);
-                }
-            };
-            
-            recognition.onresult = handleSpeechResult;
-            recognition.onerror = handleImprovedSpeechError;
-            recognition.onend = handleImprovedSpeechEnd;
-            
-            console.log('✅ 개선된 음성 인식 초기화 완료');
-            return true;
+        });
+        
+        // API 키 저장
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (apiKey) {
+                OPENAI_API_KEY = apiKey;
+                localStorage.setItem(API_KEY_STORAGE, apiKey);
+                updateApiKeyStatus(true);
+                showUpdateIndicator('API 키가 저장되었습니다');
+            }
         }
         
-        // 개선된 음성 인식 결과 처리
-        function handleSpeechResult(event) {
-            console.log('음성 인식 이벤트 발생:', event);
-            
-            // 마지막 음성 시간 업데이트
-            lastSpeechTime = Date.now();
-            
-            // 오류 카운트 리셋
-            if (isMeetingRecording) {
-                recognitionErrorCount = 0;
-                updateErrorCount('meeting', 0);
-            } else if (isVoiceMemoRecording) {
-                memoErrorCount = 0;
-                updateErrorCount('memo', 0);
+        // API 키 상태 업데이트
+        function updateApiKeyStatus(saved) {
+            const statusEl = document.getElementById('apiKeyStatus');
+            if (saved) {
+                statusEl.textContent = 'API 키 설정됨';
+                statusEl.className = 'api-key-status saved';
+            } else {
+                statusEl.textContent = 'API 키 미설정';
+                statusEl.className = 'api-key-status not-saved';
             }
-            
-            if (!event.results || event.results.length === 0) {
-                console.log('음성 인식 결과가 없습니다');
+        }
+        
+        // API 키 테스트
+        async function testApiKey() {
+            if (!OPENAI_API_KEY) {
+                alert('먼저 API 키를 입력해주세요.');
                 return;
             }
             
-            const current = event.resultIndex;
-            const transcript = event.results[current][0].transcript;
-            
-            console.log('인식된 텍스트:', transcript, 'Final:', event.results[current].isFinal);
-            
-            if (event.results[current].isFinal) {
-                console.log('최종 인식 결과:', transcript);
-                if (isMeetingRecording) {
-                    processMeetingTranscript(transcript);
-                } else if (isVoiceMemoRecording) {
-                    processVoiceMemo(transcript);
+            try {
+                const response = await fetch('https://api.openai.com/v1/models', {
+                    headers: {
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    alert('✅ API 키가 유효합니다!');
+                } else {
+                    alert('❌ API 키가 유효하지 않습니다. 다시 확인해주세요.');
                 }
-            } else {
-                // 중간 결과 표시
-                if (isMeetingRecording) {
-                    updateMeetingStatus(`듣는 중: ${transcript}`);
-                    // 중간 결과도 화면에 표시
-                    showInterimTranscript(transcript);
-                } else if (isVoiceMemoRecording) {
-                    updateVoiceMemoStatus(`듣는 중: ${transcript}`);
-                }
+            } catch (error) {
+                alert('❌ API 키 테스트 중 오류가 발생했습니다.');
+                console.error('API 키 테스트 오류:', error);
             }
         }
         
-        // 개선된 음성 인식 오류 처리
-        function handleImprovedSpeechError(event) {
-            console.error('음성 인식 오류:', event.error);
-            
-            let errorMessage = '음성 인식 오류: ';
-            let shouldReconnect = false;
-            
-            switch(event.error) {
-                case 'no-speech':
-                    errorMessage += '음성이 감지되지 않았습니다.';
-                    shouldReconnect = true;
-                    break;
-                case 'audio-capture':
-                    errorMessage += '마이크를 찾을 수 없습니다.';
-                    break;
-                case 'not-allowed':
-                    errorMessage += '마이크 권한이 거부되었습니다.';
-                    permissionGranted = false;
-                    // 녹음 중지
+        // 녹음 타이머 업데이트
+        function updateRecordingTimer(elementId) {
+            const startTime = recordingStartTime;
+            recordingTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById(elementId).textContent = `${minutes}:${seconds}`;
+                
+                // 5분 제한
+                if (elapsed >= 300) { // 5분
                     if (isMeetingRecording) {
                         toggleMeetingRecording();
-                    }
-                    if (isVoiceMemoRecording) {
+                        alert('최대 녹음 시간(5분)에 도달했습니다. 녹음이 자동으로 중지되었습니다.');
+                    } else if (isVoiceMemoRecording) {
                         toggleVoiceMemo();
-                    }
-                    break;
-                case 'aborted':
-                    errorMessage += '음성 인식이 중단되었습니다.';
-                    shouldReconnect = true;
-                    break;
-                case 'network':
-                    errorMessage += '네트워크 오류입니다.';
-                    shouldReconnect = true;
-                    break;
-                default:
-                    errorMessage += event.error;
-                    shouldReconnect = true;
-            }
-            
-            // 오류 카운트 증가
-            if (isMeetingRecording) {
-                recognitionErrorCount++;
-                updateErrorCount('meeting', recognitionErrorCount);
-                updateMeetingStatus(errorMessage);
-            } else if (isVoiceMemoRecording) {
-                memoErrorCount++;
-                updateErrorCount('memo', memoErrorCount);
-                updateVoiceMemoStatus(errorMessage);
-            }
-            
-            // 자동 재연결
-            if (shouldReconnect && (isMeetingRecording || isVoiceMemoRecording)) {
-                attemptReconnect();
-            }
-        }
-        
-        // 개선된 음성 인식 종료 처리
-        function handleImprovedSpeechEnd() {
-            console.log('음성 인식 종료 이벤트 발생');
-            
-            if (isMeetingRecording || isVoiceMemoRecording) {
-                // 자동 재연결
-                attemptReconnect();
-            }
-        }
-        
-        // 자동 재연결 함수
-        function attemptReconnect() {
-            if (isReconnecting) return;
-            
-            isReconnecting = true;
-            
-            // 재연결 알림 표시
-            if (isMeetingRecording) {
-                document.getElementById('meetingReconnectNotice').classList.add('show');
-                updateMeetingStatus('🔄 재연결 중...');
-            } else if (isVoiceMemoRecording) {
-                document.getElementById('memoReconnectNotice').classList.add('show');
-                updateVoiceMemoStatus('🔄 재연결 중...');
-            }
-            
-            // 재연결 시도
-            reconnectTimeout = setTimeout(() => {
-                try {
-                    recognition.start();
-                    console.log('음성 인식 재연결 시도');
-                    
-                    // 재연결 성공 시 알림 숨기기
-                    setTimeout(() => {
-                        isReconnecting = false;
-                        document.getElementById('meetingReconnectNotice').classList.remove('show');
-                        document.getElementById('memoReconnectNotice').classList.remove('show');
-                        
-                        if (isMeetingRecording) {
-                            updateMeetingStatus('🎤 녹음 중... (재연결됨)');
-                        } else if (isVoiceMemoRecording) {
-                            updateVoiceMemoStatus('말씀해주세요... (재연결됨)');
-                        }
-                    }, 1000);
-                } catch (e) {
-                    console.error('음성 인식 재연결 실패:', e);
-                    isReconnecting = false;
-                    
-                    // 재연결 실패 시 다시 시도
-                    if (isMeetingRecording || isVoiceMemoRecording) {
-                        attemptReconnect();
+                        alert('최대 녹음 시간(5분)에 도달했습니다. 녹음이 자동으로 중지되었습니다.');
                     }
                 }
             }, 1000);
         }
         
-        // 오류 카운트 표시 업데이트
-        function updateErrorCount(type, count) {
-            if (type === 'meeting') {
-                const errorEl = document.getElementById('meetingErrorCount');
-                if (count > 0) {
-                    errorEl.textContent = count;
-                    errorEl.style.display = 'flex';
-                } else {
-                    errorEl.style.display = 'none';
+        // 회의 녹음 토글
+        async function toggleMeetingRecording() {
+            if (!OPENAI_API_KEY) {
+                alert('먼저 OpenAI API 키를 설정해주세요.');
+                document.getElementById('apiKeyInput').focus();
+                return;
+            }
+            
+            const btn = document.getElementById('meetingRecordBtn');
+            const timerEl = document.getElementById('recordingTimer');
+            
+            if (!isMeetingRecording) {
+                try {
+                    // 마이크 권한 요청
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                            sampleRate: 16000 // Whisper 최적화
+                        } 
+                    });
+                    
+                    // MediaRecorder 초기화
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: 'audio/webm'
+                    });
+                    
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        // 오디오 Blob 생성
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        
+                        // Whisper API로 전송
+                        await sendToWhisper(audioBlob, 'meeting');
+                        
+                        // 스트림 정리
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    // 녹음 시작
+                    mediaRecorder.start();
+                    isVoiceMemoRecording = true;
+                    recordingStartTime = Date.now();
+                    
+                    btn.classList.add('recording');
+                    btn.innerHTML = '<span>⏹️</span> 녹음 중지';
+                    updateVoiceMemoStatus('녹음 중...');
+                    
+                    timerEl.style.display = 'inline-block';
+                    updateRecordingTimer('memoTimer');
+                    
+                    showUpdateIndicator('음성 메모가 시작되었습니다. 위험 상황을 설명해주세요.');
+                } catch (error) {
+                    console.error('마이크 접근 오류:', error);
+                    handleMicrophoneError(error);
                 }
-            } else if (type === 'memo') {
-                const errorEl = document.getElementById('memoErrorCount');
-                if (count > 0) {
-                    errorEl.textContent = count;
-                    errorEl.style.display = 'flex';
+            } else {
+                // 녹음 중지
+                isVoiceMemoRecording = false;
+                mediaRecorder.stop();
+                
+                btn.classList.remove('recording');
+                btn.innerHTML = '<span>🎤</span> 음성 메모 시작';
+                updateVoiceMemoStatus('녹음 완료. 음성을 텍스트로 변환 중...');
+                
+                clearInterval(recordingTimer);
+                timerEl.style.display = 'none';
+                timerEl.textContent = '00:00';
+            }
+        }
+        
+        // Whisper API로 음성 전송
+        async function sendToWhisper(audioBlob, type) {
+            try {
+                // 진행 상태 표시
+                showUploadProgress(true);
+                updateProgressText('음성 파일 업로드 중...');
+                
+                // FormData 생성
+                const formData = new FormData();
+                formData.append('file', audioBlob, 'audio.webm');
+                formData.append('model', 'whisper-1');
+                formData.append('language', 'ko'); // 한국어 지정
+                formData.append('response_format', 'text');
+                formData.append('temperature', '0.2'); // 더 정확한 인식을 위해 낮은 temperature
+                
+                // API 요청
+                const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    },
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Whisper API 오류: ' + response.status);
+                }
+                
+                updateProgressText('텍스트 변환 완료!');
+                
+                const transcript = await response.text();
+                console.log('Whisper 인식 결과:', transcript);
+                
+                // 타입에 따라 처리
+                if (type === 'meeting') {
+                    processMeetingTranscript(transcript);
+                    updateMeetingStatus('인식 완료');
+                } else if (type === 'memo') {
+                    processVoiceMemo(transcript);
+                    updateVoiceMemoStatus('인식 완료');
+                }
+                
+                showUploadProgress(false);
+                
+            } catch (error) {
+                console.error('Whisper API 오류:', error);
+                showUpdateIndicator('음성 인식 중 오류가 발생했습니다: ' + error.message);
+                showUploadProgress(false);
+                
+                if (type === 'meeting') {
+                    updateMeetingStatus('인식 실패');
                 } else {
-                    errorEl.style.display = 'none';
+                    updateVoiceMemoStatus('인식 실패');
                 }
             }
         }
         
-        // 중간 결과 표시 함수
-        function showInterimTranscript(text) {
-            const transcriptBox = document.getElementById('transcriptBox');
-            
-            // 초기 메시지 제거
-            if (transcriptBox.querySelector('p')) {
-                transcriptBox.innerHTML = '';
+        // 업로드 진행 상태 표시
+        function showUploadProgress(show) {
+            const progressEl = document.getElementById('uploadProgress');
+            if (show) {
+                progressEl.classList.add('show');
+                document.getElementById('progressFill').style.width = '50%';
+            } else {
+                progressEl.classList.remove('show');
+                document.getElementById('progressFill').style.width = '0%';
             }
-            
-            // 임시 텍스트 표시 또는 업데이트
-            let interimDiv = document.getElementById('interimTranscript');
-            if (!interimDiv) {
-                interimDiv = document.createElement('div');
-                interimDiv.id = 'interimTranscript';
-                interimDiv.style.opacity = '0.6';
-                interimDiv.style.fontStyle = 'italic';
-                interimDiv.className = 'transcript-item';
-                transcriptBox.appendChild(interimDiv);
-            }
-            
-            interimDiv.innerHTML = `
-                <div class="transcript-time">${new Date().toLocaleTimeString('ko-KR')}</div>
-                <div class="transcript-speaker">${currentUser.name} (인식 중...)</div>
-                <div class="transcript-text">${text}</div>
-            `;
+        }
+        
+        // 진행 텍스트 업데이트
+        function updateProgressText(text) {
+            document.getElementById('progressText').textContent = text;
         }
         
         // 회의록 처리
         function processMeetingTranscript(transcript) {
             console.log('회의록 처리 시작:', transcript);
-            
-            // 임시 텍스트 제거
-            const interimDiv = document.getElementById('interimTranscript');
-            if (interimDiv) {
-                interimDiv.remove();
-            }
             
             const timestamp = new Date().toLocaleTimeString('ko-KR');
             
@@ -1865,136 +1886,7 @@
             container.appendChild(item);
         }
         
-        // 개선된 회의 녹음 토글
-        async function toggleMeetingRecording() {
-            if (!recognition && !initializeSpeechRecognition()) {
-                return;
-            }
-            
-            const btn = document.getElementById('meetingRecordBtn');
-            
-            if (!isMeetingRecording) {
-                try {
-                    // 권한 요청
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: true
-                        } 
-                    });
-                    
-                    // 스트림 정리
-                    stream.getTracks().forEach(track => track.stop());
-                    
-                    // 녹음 시작
-                    isMeetingRecording = true;
-                    meetingStartTime = new Date();
-                    recognitionErrorCount = 0;
-                    updateErrorCount('meeting', 0);
-                    
-                    btn.classList.add('recording');
-                    btn.innerHTML = '<span>⏹️</span> 녹음 중지';
-                    updateMeetingStatus('🎤 녹음 중... (말씀해주세요)');
-                    
-                    // 음성 인식 시작
-                    recognition.start();
-                    console.log('음성 인식 시작됨');
-                    
-                    // 사용자에게 안내
-                    showUpdateIndicator('마이크가 활성화되었습니다. 계속 말씀해주세요.');
-                } catch (error) {
-                    console.error('마이크 접근 오류:', error);
-                    handleMicrophoneError(error);
-                }
-            } else {
-                // 녹음 중지
-                isMeetingRecording = false;
-                btn.classList.remove('recording');
-                btn.innerHTML = '<span>🎙️</span> 회의 녹음 시작';
-                updateMeetingStatus('녹음 완료');
-                
-                // 재연결 타임아웃 클리어
-                if (reconnectTimeout) {
-                    clearTimeout(reconnectTimeout);
-                    reconnectTimeout = null;
-                }
-                
-                recognition.stop();
-                console.log('음성 인식 중지됨');
-                
-                // 알림 숨기기
-                document.getElementById('meetingReconnectNotice').classList.remove('show');
-                
-                // 임시 텍스트 제거
-                const interimDiv = document.getElementById('interimTranscript');
-                if (interimDiv) {
-                    interimDiv.remove();
-                }
-            }
-        }
-        
-        // 개선된 음성 메모 토글
-        async function toggleVoiceMemo() {
-            if (!recognition && !initializeSpeechRecognition()) {
-                return;
-            }
-            
-            const btn = document.getElementById('voiceMemoBtn');
-            
-            if (!isVoiceMemoRecording) {
-                try {
-                    // 권한 요청
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: true
-                        } 
-                    });
-                    
-                    // 스트림 정리
-                    stream.getTracks().forEach(track => track.stop());
-                    
-                    // 녹음 시작
-                    isVoiceMemoRecording = true;
-                    memoErrorCount = 0;
-                    updateErrorCount('memo', 0);
-                    
-                    btn.classList.add('recording');
-                    btn.innerHTML = '<span>⏹️</span> 녹음 중지';
-                    updateVoiceMemoStatus('말씀해주세요...');
-                    
-                    recognition.start();
-                    console.log('음성 메모 시작됨');
-                    
-                    showUpdateIndicator('음성 메모가 시작되었습니다. 위험 상황을 설명해주세요.');
-                } catch (error) {
-                    console.error('마이크 접근 오류:', error);
-                    handleMicrophoneError(error);
-                }
-            } else {
-                // 녹음 중지
-                isVoiceMemoRecording = false;
-                btn.classList.remove('recording');
-                btn.innerHTML = '<span>🎤</span> 음성 메모 시작';
-                updateVoiceMemoStatus('녹음 완료');
-                
-                // 재연결 타임아웃 클리어
-                if (reconnectTimeout) {
-                    clearTimeout(reconnectTimeout);
-                    reconnectTimeout = null;
-                }
-                
-                recognition.stop();
-                console.log('음성 메모 중지됨');
-                
-                // 알림 숨기기
-                document.getElementById('memoReconnectNotice').classList.remove('show');
-            }
-        }
-        
-        // 마이크 오류 처리 통합 함수
+        // 마이크 오류 처리
         function handleMicrophoneError(error) {
             let errorMsg = '마이크 접근 오류:\n\n';
             
@@ -2016,16 +1908,22 @@
         // 상태 업데이트 함수들
         function updateMeetingStatus(message) {
             const statusEl = document.getElementById('meetingStatus');
-            statusEl.textContent = message;
+            const baseText = message;
+            const timerEl = document.getElementById('recordingTimer');
+            
+            // 타이머가 표시중이면 텍스트만 업데이트
+            if (timerEl.style.display === 'inline-block') {
+                statusEl.childNodes[0].textContent = baseText + ' ';
+            } else {
+                statusEl.innerHTML = baseText;
+            }
             
             // 상태에 따라 색상 변경
             if (message.includes('녹음 중')) {
                 statusEl.style.color = '#28a745';
                 statusEl.style.fontWeight = 'bold';
-            } else if (message.includes('오류') || message.includes('차단')) {
+            } else if (message.includes('오류') || message.includes('실패')) {
                 statusEl.style.color = '#dc3545';
-            } else if (message.includes('재연결')) {
-                statusEl.style.color = '#ffc107';
             } else {
                 statusEl.style.color = '#333';
                 statusEl.style.fontWeight = 'normal';
@@ -2037,12 +1935,10 @@
             statusEl.textContent = message;
             
             // 상태에 따라 색상 변경
-            if (message.includes('듣는 중')) {
+            if (message.includes('녹음 중')) {
                 statusEl.style.color = '#28a745';
-            } else if (message.includes('오류') || message.includes('차단')) {
+            } else if (message.includes('오류') || message.includes('실패')) {
                 statusEl.style.color = '#dc3545';
-            } else if (message.includes('재연결')) {
-                statusEl.style.color = '#ffc107';
             } else {
                 statusEl.style.color = '#666';
             }
@@ -2223,14 +2119,6 @@
             updateUI();
             startAutoSync();
             initializeEventListeners();
-            
-            // 음성 인식 초기화
-            console.log('음성 인식 초기화 시도...');
-            if (initializeSpeechRecognition()) {
-                console.log('✅ 음성 인식 준비 완료');
-            } else {
-                console.log('❌ 음성 인식 초기화 실패');
-            }
             
             // 초기 위험요인 테이블 업데이트
             setTimeout(() => {
@@ -2488,7 +2376,8 @@
                 테이블 행수: ${document.getElementById('riskTableBody').rows.length}<br>
                 마지막 업데이트: ${sessionData.lastUpdated || 'N/A'}<br>
                 업데이트한 사람: ${sessionData.lastUpdatedBy || 'N/A'}<br>
-                현재 시간: ${new Date().toLocaleTimeString()}
+                현재 시간: ${new Date().toLocaleTimeString()}<br>
+                API 키 설정: ${OPENAI_API_KEY ? '있음' : '없음'}
             `;
             debugDiv.innerHTML = info;
         }
@@ -3053,9 +2942,9 @@
         // 로그아웃
         function logout() {
             if (confirm('정말 나가시겠습니까?')) {
-                // 음성 인식 중지
-                if (recognition && (isMeetingRecording || isVoiceMemoRecording)) {
-                    recognition.stop();
+                // 음성 녹음 중지
+                if (mediaRecorder && (isMeetingRecording || isVoiceMemoRecording)) {
+                    mediaRecorder.stop();
                 }
                 location.reload();
             }
@@ -3162,4 +3051,83 @@
         }
     </script>
 </body>
-</html>
+</html>Recorder.start();
+                    isMeetingRecording = true;
+                    recordingStartTime = Date.now();
+                    
+                    btn.classList.add('recording');
+                    btn.innerHTML = '<span>⏹️</span> 녹음 중지';
+                    updateMeetingStatus('🎤 녹음 중...');
+                    
+                    timerEl.style.display = 'inline-block';
+                    updateRecordingTimer('recordingTimer');
+                    
+                    showUpdateIndicator('회의 녹음이 시작되었습니다. 최대 5분까지 녹음 가능합니다.');
+                } catch (error) {
+                    console.error('마이크 접근 오류:', error);
+                    handleMicrophoneError(error);
+                }
+            } else {
+                // 녹음 중지
+                isMeetingRecording = false;
+                mediaRecorder.stop();
+                
+                btn.classList.remove('recording');
+                btn.innerHTML = '<span>🎙️</span> 회의 녹음 시작';
+                updateMeetingStatus('녹음 완료. 음성을 텍스트로 변환 중...');
+                
+                clearInterval(recordingTimer);
+                timerEl.style.display = 'none';
+                timerEl.textContent = '00:00';
+            }
+        }
+        
+        // 음성 메모 토글
+        async function toggleVoiceMemo() {
+            if (!OPENAI_API_KEY) {
+                alert('먼저 OpenAI API 키를 설정해주세요.');
+                document.getElementById('apiKeyInput').focus();
+                return;
+            }
+            
+            const btn = document.getElementById('voiceMemoBtn');
+            const timerEl = document.getElementById('memoTimer');
+            
+            if (!isVoiceMemoRecording) {
+                try {
+                    // 마이크 권한 요청
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                            sampleRate: 16000 // Whisper 최적화
+                        } 
+                    });
+                    
+                    // MediaRecorder 초기화
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: 'audio/webm'
+                    });
+                    
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        // 오디오 Blob 생성
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        
+                        // Whisper API로 전송
+                        await sendToWhisper(audioBlob, 'memo');
+                        
+                        // 스트림 정리
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    // 녹음 시작
+                    media
