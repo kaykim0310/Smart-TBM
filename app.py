@@ -4,7 +4,7 @@ import streamlit as st
 html_url = "https://kaykim0310.github.io/Smart-TBM/Smart-TBM.html"
 
 # Streamlit 앱 제목 설정
-st.title("GitHub HTML 파일 표시하기")
+st.title("")
 
 # st.components.v1.iframe을 사용해 HTML 파일 보여주기
 st.components.v1.iframe(html_url, height=600, scrolling=True)
