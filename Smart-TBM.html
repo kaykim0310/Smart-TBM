@@ -1,0 +1,3022 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 음성 지원 TBM 안전미팅 시스템</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Nanum Gothic', 'Malgun Gothic', sans-serif;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        
+        /* 로그인 화면 스타일 */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .login-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .login-form button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .login-form button:hover {
+            background: #5a5ecf;
+        }
+        
+        .session-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .session-code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        /* 메인 앱 스타일 */
+        .app-container {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .app-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .app-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .session-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .online-users {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .tab-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            background: #f1f1f1;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .tab-button.active {
+            background: white;
+            border-bottom: 2px solid #667eea;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 폼 스타일 */
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            flex: 1;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        /* 음성 관련 스타일 */
+        .voice-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e8f4f8;
+            border-radius: 8px;
+            align-items: center;
+        }
+        
+        .voice-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .voice-btn.record {
+            background: #ff4444;
+            color: white;
+        }
+        
+        .voice-btn.record:hover {
+            background: #dd3333;
+        }
+        
+        .voice-btn.recording {
+            background: #ff6666;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        .voice-btn.stop {
+            background: #999;
+            color: white;
+        }
+        
+        .voice-status {
+            flex: 1;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        
+        .transcript-box {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .transcript-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .transcript-time {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .transcript-speaker {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .transcript-text {
+            color: #555;
+        }
+        
+        .keyword-highlight {
+            background: #ffeb3b;
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .voice-memo-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .voice-memo-btn {
+            background: #ff9800;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .voice-memo-btn:hover {
+            background: #e68900;
+        }
+        
+        .voice-memo-btn.recording {
+            background: #ff5722;
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* WorkTalk 카드 스타일 */
+        .worktalk-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .worktalk-card {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            transition: transform 0.2s;
+        }
+        
+        .worktalk-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .worktalk-card.voice-generated {
+            border: 2px solid #ff9800;
+            background: #fff8e1;
+        }
+        
+        .card-author {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        
+        .voice-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #ff9800;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        
+        .card-photo {
+            width: 100%;
+            height: 150px;
+            background: #e9ecef;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .risk-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .risk-badge.high { background: #dc3545; }
+        .risk-badge.medium { background: #ffc107; }
+        .risk-badge.low { background: #28a745; }
+        
+        /* 버튼 스타일 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a5ecf;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        /* 실시간 업데이트 표시 */
+        .update-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* 동기화 상태 표시 */
+        .sync-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #e9ecef;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        
+        .sync-status.syncing {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .sync-status.synced {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .sync-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* 참석자 테이블 */
+        .attendees-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .attendees-table th,
+        .attendees-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .attendees-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .signature-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .signature-status.signed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .signature-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        /* 디버그 정보 스타일 추가 */
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .debug-info.show {
+            display: block;
+        }
+        
+        /* 알림 박스 */
+        .notice-box {
+            padding: 15px;
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #0c5460;
+        }
+        
+        .notice-box.warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        
+        /* AI 분석 결과 박스 */
+        .ai-analysis-box {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .ai-analysis-box h4 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+        
+        .ai-analysis-item {
+            margin-bottom: 8px;
+            padding: 5px 10px;
+            background: white;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .ai-analysis-label {
+            font-weight: bold;
+            color: #1976d2;
+            min-width: 80px;
+        }
+        
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .worktalk-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .app-header h1 {
+                font-size: 20px;
+            }
+            
+            .tab-button {
+                font-size: 14px;
+                padding: 12px;
+            }
+            
+            .voice-controls {
+                flex-wrap: wrap;
+            }
+        }
+        
+        /* 인쇄 스타일 개선 */
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
+            
+            body {
+                font-size: 11pt;
+                line-height: 1.4;
+            }
+            
+            .login-container,
+            .btn,
+            .btn-group,
+            .tab-buttons,
+            .session-status button,
+            .update-indicator,
+            .loading-spinner,
+            .modal,
+            .debug-info,
+            .sync-status,
+            .notice-box,
+            .voice-controls,
+            .transcript-box,
+            .voice-memo-box {
+                display: none !important;
+            }
+            
+            .app-container {
+                max-width: 100%;
+                padding: 0;
+            }
+            
+            .app-header {
+                page-break-after: avoid;
+                margin-bottom: 10px;
+                padding: 10px;
+                border: 1px solid #000;
+            }
+            
+            .app-header h1 {
+                font-size: 18pt;
+                margin-bottom: 5px;
+            }
+            
+            .session-status {
+                border-top: 1px solid #ddd;
+                padding-top: 5px;
+                margin-top: 5px;
+            }
+            
+            .tab-container {
+                box-shadow: none;
+                border: 1px solid #000;
+            }
+            
+            /* TBM 탭만 인쇄되도록 설정 */
+            #tbmTab {
+                display: block !important;
+                padding: 15px;
+                border: none;
+            }
+            
+            /* WorkTalk 탭과 내보내기 탭은 인쇄에서 제외 */
+            #worktalkTab,
+            #exportTab,
+            #voiceTab {
+                display: none !important;
+            }
+            
+            .tab-content h2 {
+                font-size: 14pt;
+                margin-top: 0;
+                margin-bottom: 10px;
+                padding-bottom: 5px;
+                border-bottom: 2px solid #000;
+            }
+            
+            .form-section {
+                page-break-inside: avoid;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+            
+            .form-group label {
+                font-weight: bold;
+                font-size: 10pt;
+            }
+            
+            input[type="text"],
+            input[type="date"],
+            input[type="time"],
+            textarea,
+            select {
+                border: 1px solid #000 !important;
+                background: none !important;
+                padding: 3px !important;
+                font-size: 10pt;
+            }
+            
+            input[type="checkbox"] {
+                width: 12px;
+                height: 12px;
+            }
+            
+            .attendees-table,
+            #riskTable {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 9pt;
+                page-break-inside: auto;
+            }
+            
+            .attendees-table th,
+            .attendees-table td,
+            #riskTable th,
+            #riskTable td {
+                border: 1px solid #000 !important;
+                padding: 5px;
+                page-break-inside: avoid;
+            }
+            
+            .attendees-table tr,
+            #riskTable tr {
+                page-break-inside: avoid;
+            }
+            
+            .risk-badge {
+                display: inline;
+                padding: 2px 4px;
+                font-size: 9pt;
+                background: none !important;
+                border: 1px solid #000;
+                color: #000 !important;
+            }
+            
+            .risk-badge.high::before {
+                content: "[상] ";
+            }
+            
+            .risk-badge.medium::before {
+                content: "[중] ";
+            }
+            
+            .risk-badge.low::before {
+                content: "[하] ";
+            }
+            
+            .user-avatar {
+                display: inline;
+                border: 1px solid #000;
+                padding: 2px 4px;
+                margin-right: 5px;
+            }
+            
+            .signature-status {
+                border: 1px solid #000;
+                padding: 2px 4px;
+            }
+            
+            #leaderSignatureCanvas {
+                border: 2px solid #000 !important;
+                height: 80px !important;
+            }
+            
+            /* TBM 탭에 제목 추가 */
+            #tbmTab::before {
+                content: "TBM(Tool Box Meeting) 작업 전 안전점검회의";
+                display: block;
+                font-size: 20pt;
+                font-weight: bold;
+                margin-bottom: 20px;
+                text-align: center;
+                border: 2px solid #000;
+                padding: 10px;
+                background: #f0f0f0;
+            }
+            
+            /* 페이지 번호 (브라우저에서 자동 추가) */
+            @bottom-right {
+                content: counter(page);
+            }
+        }
+        
+        /* 로딩 스피너 */
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 서명 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .signature-canvas {
+            width: 100%;
+            height: 200px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-box">
+            <h2>🎙️ AI 음성 지원 TBM 시스템</h2>
+            <form class="login-form" id="loginForm" onsubmit="return false;">
+                <input type="text" id="userName" placeholder="이름을 입력하세요" required>
+                <input type="text" id="sessionCode" placeholder="세션 코드 (새 세션은 비워두세요)">
+                <button type="button" onclick="handleLogin()">입장하기</button>
+            </form>
+            <div class="session-info">
+                <p>🔊 음성으로 더 쉽게!<br>새로운 세션을 만들거나<br>기존 세션 코드를 입력하세요</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 메인 앱 -->
+    <div class="app-container" id="mainApp">
+        <div class="app-header">
+            <h1>🎙️ AI 음성 지원 TBM(Tool Box Meeting) 안전미팅</h1>
+            <div class="session-status">
+                <div>
+                    세션 코드: <span class="session-code" id="currentSessionCode">-</span>
+                    <span class="sync-status synced" id="syncStatus">
+                        <span>●</span> 동기화됨
+                    </span>
+                </div>
+                <div class="online-users" id="onlineUsers">
+                    <span>참여자:</span>
+                </div>
+                <button class="btn btn-danger" onclick="logout()">나가기</button>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('tbm', event)">TBM 서식</button>
+                <button class="tab-button" onclick="switchTab('voice', event)">🎙️ 음성 회의록</button>
+                <button class="tab-button" onclick="switchTab('worktalk', event)">WorkTalk 데이터</button>
+                <button class="tab-button" onclick="switchTab('export', event)">데이터 내보내기</button>
+            </div>
+            
+            <!-- TBM 서식 탭 -->
+            <div class="tab-content active" id="tbmTab">
+                <div class="form-section">
+                    <h2>기본 정보</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>TBM 실시일</label>
+                            <input type="date" id="tbmDate">
+                        </div>
+                        <div class="form-group">
+                            <label>TBM 실시시간</label>
+                            <input type="time" id="tbmTime">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>TBM 실시장소</label>
+                            <input type="text" id="tbmLocation" placeholder="실시장소 입력">
+                        </div>
+                        <div class="form-group">
+                            <label>부서/팀</label>
+                            <input type="text" id="department" placeholder="부서명 입력">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>TBM 리더</label>
+                        <input type="text" id="tbmLeader" placeholder="리더명 입력">
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2>작업 내용</h2>
+                    <div class="form-group">
+                        <label>작업장소</label>
+                        <input type="text" id="workLocation" placeholder="작업장소를 입력하세요">
+                    </div>
+                    <div class="form-group">
+                        <label>작업내용</label>
+                        <textarea id="workContent" placeholder="작업내용을 상세히 기술하세요"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>작업 전 준비사항</label>
+                        <textarea id="preparation" placeholder="작업 전 준비사항을 기술하세요"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>작업 중 주의사항</label>
+                        <textarea id="precautions" placeholder="작업 중 주의사항을 기술하세요"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2>착용 보호구</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" name="ppe" value="안전모" style="margin-right: 5px;"> 안전모
+                        </label>
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" name="ppe" value="안전화" style="margin-right: 5px;"> 안전화
+                        </label>
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" name="ppe" value="안전장갑" style="margin-right: 5px;"> 안전장갑
+                        </label>
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" name="ppe" value="보안경" style="margin-right: 5px;"> 보안경
+                        </label>
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" name="ppe" value="방진마스크" style="margin-right: 5px;"> 방진마스크
+                        </label>
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" name="ppe" value="귀마개" style="margin-right: 5px;"> 귀마개
+                        </label>
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" name="ppe" value="안전대" style="margin-right: 5px;"> 안전대
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="otherPpe" placeholder="기타 보호구">
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2>위험요인 및 안전대책</h2>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <button class="btn btn-primary" onclick="forceUpdateRiskTable()">테이블 강제 새로고침</button>
+                        <button class="btn btn-warning" onclick="manualSync()">수동 동기화</button>
+                        <button class="btn" onclick="toggleDebugInfo()">디버그 정보 표시</button>
+                    </div>
+                    <div class="debug-info" id="debugInfo"></div>
+                    <div style="overflow-x: auto;">
+                        <table class="attendees-table" id="riskTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">순번</th>
+                                    <th style="width: 15%;">작업장소</th>
+                                    <th style="width: 20%;">작업내용</th>
+                                    <th style="width: 20%;">위험요인</th>
+                                    <th style="width: 10%;">작업빈도</th>
+                                    <th style="width: 10%;">위험중대성</th>
+                                    <th style="width: 10%;">위험도</th>
+                                    <th style="width: 10%;">개선대책</th>
+                                </tr>
+                            </thead>
+                            <tbody id="riskTableBody">
+                                <!-- 위험요인 항목이 여기에 추가됩니다 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <p style="margin-top: 10px; color: #666;">※ WorkTalk 탭에서 위험성평가를 작성하거나 음성으로 입력하면 자동으로 추가됩니다</p>
+                </div>
+                
+                <div class="form-section">
+                    <h2>참석자 및 서명</h2>
+                    <table class="attendees-table">
+                        <thead>
+                            <tr>
+                                <th>이름</th>
+                                <th>상태</th>
+                                <th>서명</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendeesList">
+                            <!-- 참석자 목록이 여기에 표시됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="form-section">
+                    <h2>TBM 리더 서명</h2>
+                    <div style="padding: 15px; background: #f0f8ff; border-radius: 5px; margin-bottom: 15px;">
+                        <p style="margin: 0; color: #0066cc;">
+                            <strong>📌 리더 서명 방법:</strong><br>
+                            1. 위의 "기본 정보"에서 TBM 리더 이름을 먼저 입력하세요<br>
+                            2. TBM 리더로 지정된 사용자만 서명할 수 있습니다<br>
+                            3. 현재 리더: <span id="currentLeaderName" style="font-weight: bold; color: #ff6600;">미지정</span>
+                        </p>
+                    </div>
+                    <div style="border: 2px solid #ddd; height: 150px; border-radius: 5px; position: relative; background: white;">
+                        <canvas id="leaderSignatureCanvas" style="width: 100%; height: 100%; cursor: crosshair;"></canvas>
+                    </div>
+                    <div class="btn-group" style="justify-content: flex-start; margin-top: 10px;">
+                        <button class="btn btn-primary" onclick="openLeaderSignatureModal()">리더 서명하기</button>
+                        <button class="btn" onclick="clearLeaderSignature()">서명 지우기</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 음성 회의록 탭 -->
+            <div class="tab-content" id="voiceTab">
+                <div class="notice-box">
+                    <strong>🎙️ AI 음성 회의록 기능</strong><br>
+                    • TBM 미팅을 녹음하면서 실시간으로 중요 내용을 자동 추출합니다<br>
+                    • "위험요인", "작업내용", "주의사항" 등 키워드를 자동으로 인식합니다<br>
+                    • 참석자별 발언을 구분하여 기록합니다<br><br>
+                    <strong>📱 모바일 사용 시:</strong><br>
+                    • Chrome 브라우저 권장 (iOS는 Safari)<br>
+                    • 마이크 권한 문제 시 "마이크 테스트" 버튼 클릭<br>
+                    • 시크릿 모드에서 시도하면 권한 재요청 가능
+                </div>
+                
+                <div class="voice-controls">
+                    <button class="voice-btn record" id="meetingRecordBtn" onclick="toggleMeetingRecording()">
+                        <span>🎙️</span> 회의 녹음 시작
+                    </button>
+                    <div class="voice-status" id="meetingStatus">준비됨</div>
+                    <button class="btn btn-warning" onclick="testMicrophone()" style="margin-left: auto;">
+                        🔧 마이크 테스트
+                    </button>
+                </div>
+                
+                <div class="form-section">
+                    <h2>실시간 회의록</h2>
+                    <div class="transcript-box" id="transcriptBox">
+                        <p style="text-align: center; color: #999;">회의 녹음을 시작하면 여기에 내용이 표시됩니다</p>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2>AI 분석 결과</h2>
+                    <div class="ai-analysis-box" id="aiAnalysisBox">
+                        <p style="text-align: center; color: #999;">회의 내용이 자동으로 분석되어 여기에 표시됩니다</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- WorkTalk 데이터 탭 -->
+            <div class="tab-content" id="worktalkTab">
+                <div class="notice-box warning">
+                    <strong>⚠️ 협업 시 주의사항:</strong><br>
+                    • 여러 명이 동시에 입력할 때는 한 번에 한 명씩 순차적으로 입력하세요<br>
+                    • 위험성평가 추가 후 "데이터가 동기화되었습니다" 메시지를 확인하세요<br>
+                    • 데이터가 보이지 않으면 "수동 동기화" 버튼을 클릭하세요
+                </div>
+                
+                <div class="voice-memo-box">
+                    <h3>🗣️ 음성으로 위험성평가 작성하기</h3>
+                    <p>현장에서 음성으로 말하면 AI가 자동으로 위험성평가를 작성합니다</p>
+                    <button class="voice-memo-btn" id="voiceMemoBtn" onclick="toggleVoiceMemo()">
+                        <span>🎤</span> 음성 메모 시작
+                    </button>
+                    <div id="voiceMemoStatus" style="margin-top: 10px; font-style: italic; color: #666;"></div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #999;">
+                        💡 팁: 권한 문제 시 Chrome 시크릿 모드에서 다시 시도하세요
+                    </div>
+                </div>
+                
+                <h2>위험성평가 작성</h2>
+                <form id="worktalkForm">
+                    <div class="form-group">
+                        <label>현장 사진</label>
+                        <input type="file" id="wtPhoto" accept="image/*">
+                        <div class="card-photo" id="photoPreview">
+                            <span>사진을 선택하세요</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>작업장소</label>
+                        <input type="text" id="wtLocation" required>
+                    </div>
+                    <div class="form-group">
+                        <label>작업내용</label>
+                        <textarea id="wtContent" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>위험요인</label>
+                        <textarea id="wtDanger" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>작업빈도</label>
+                            <select id="wtFrequency" required>
+                                <option value="">선택하세요</option>
+                                <option value="5">매일</option>
+                                <option value="4">주 1-2회</option>
+                                <option value="3">월 1-2회</option>
+                                <option value="2">분기 1회</option>
+                                <option value="1">년 1-2회</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>위험중대성</label>
+                            <select id="wtSeverity" required>
+                                <option value="">선택하세요</option>
+                                <option value="4">사망 또는 장애성 중상</option>
+                                <option value="3">중상-입원필요</option>
+                                <option value="2">경상-통원치료</option>
+                                <option value="1">아차사고</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>개선대책</label>
+                        <textarea id="wtImprovement" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="submitWorktalk">위험성평가 추가</button>
+                </form>
+                
+                <h2 style="margin-top: 40px;">등록된 위험성평가 (총 <span id="worktalkCount">0</span>건)</h2>
+                <div class="worktalk-cards" id="worktalkCards">
+                    <!-- WorkTalk 카드가 여기에 표시됩니다 -->
+                </div>
+            </div>
+            
+            <!-- 데이터 내보내기 탭 -->
+            <div class="tab-content" id="exportTab">
+                <h2>데이터 내보내기</h2>
+                <div class="form-section">
+                    <p>현재 세션의 모든 데이터를 Excel 파일로 내보낼 수 있습니다.</p>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="exportToExcel()">Excel로 내보내기</button>
+                        <button class="btn btn-primary" onclick="printDocument()">PDF로 저장/인쇄</button>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 5px; border: 1px solid #90caf9;">
+                        <h4>💾 로컬 서버 자동 저장</h4>
+                        <p style="margin: 10px 0;">Excel 내보내기 시 로컬 서버에 자동으로 저장됩니다:</p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>서버 주소: <code>http://localhost:3000</code></li>
+                            <li>저장 위치: <code>tbm_data/연도별폴더/</code></li>
+                            <li>파일명: <code>TBM_세션코드_날짜시간.csv</code></li>
+                        </ul>
+                        <p style="color: #666; font-size: 12px;">※ 서버가 실행 중이지 않아도 로컬 다운로드는 정상 작동합니다</p>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                        <h4>💡 PDF 저장 방법</h4>
+                        <ol style="margin: 10px 0; padding-left: 20px;">
+                            <li>위의 "PDF로 저장/인쇄" 버튼을 클릭하세요</li>
+                            <li>인쇄 대화상자에서 프린터를 "PDF로 저장" 또는 "Microsoft Print to PDF"로 선택하세요</li>
+                            <li>용지 크기는 A4, 여백은 "기본값"을 권장합니다</li>
+                            <li>"저장" 버튼을 클릭하여 PDF 파일로 저장하세요</li>
+                        </ol>
+                        <p style="color: #666; font-size: 14px;">※ TBM 서식 탭의 내용만 PDF로 저장됩니다 (위험성평가 내용은 이미 TBM 서식에 포함됨)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 서명 모달 -->
+    <div class="modal" id="signatureModal">
+        <div class="modal-content">
+            <h3>서명하기</h3>
+            <canvas class="signature-canvas" id="signatureCanvas"></canvas>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="saveSignature()">저장</button>
+                <button class="btn btn-danger" onclick="clearSignature()">지우기</button>
+                <button class="btn" onclick="closeSignatureModal()">취소</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 로딩 스피너 -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- 업데이트 표시 -->
+    <div class="update-indicator" id="updateIndicator">
+        <span id="updateMessage">데이터가 업데이트되었습니다</span>
+    </div>
+
+    <script>
+        // 전역 변수
+        let currentUser = null;
+        let sessionData = {
+            sessionCode: '',
+            users: [],
+            tbmData: {},
+            worktalkData: [],
+            signatures: {},
+            voiceTranscripts: [], // 음성 회의록
+            version: 0
+        };
+        
+        // 음성 인식 관련 변수
+        let recognition = null;
+        let isMeetingRecording = false;
+        let isVoiceMemoRecording = false;
+        let meetingStartTime = null;
+        let currentSpeaker = null;
+        
+        // 로컬 스토리지 키
+        const STORAGE_KEY = 'tbm_sessions';
+        
+        // 디버그 모드
+        let debugMode = false;
+        
+        // 동기화 상태
+        let isSyncing = false;
+        let syncInterval = null;
+        
+        // 안전 관련 키워드
+        const SAFETY_KEYWORDS = {
+            danger: ['위험', '추락', '충돌', '협착', '감전', '화재', '폭발', '질식', '붕괴', '낙하물', '전도', '베임', '찔림'],
+            work: ['작업', '공사', '설치', '해체', '용접', '절단', '도장', '운반', '적재', '굴착', '배관', '전기'],
+            ppe: ['안전모', '안전화', '안전대', '안전장갑', '보안경', '방진마스크', '귀마개', '보호구'],
+            action: ['주의', '확인', '점검', '착용', '설치', '차단', '격리', '표시', '교육', '준수']
+        };
+        
+        // 음성 인식 초기화
+        function initializeSpeechRecognition() {
+            console.log('음성 인식 초기화 시작...');
+            
+            // 브라우저 지원 확인
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                const msg = '❌ 음성 인식 미지원 브라우저\n\n' +
+                           '지원 브라우저:\n' +
+                           '• PC: Chrome, Edge\n' +
+                           '• Android: Chrome\n' +
+                           '• iOS: Safari (Chrome X)\n\n' +
+                           '현재 브라우저를 확인해주세요!';
+                alert(msg);
+                console.error('음성 인식 API 미지원');
+                return false;
+            }
+            
+            console.log('✅ 음성 인식 API 지원 확인');
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;  // 계속 듣기
+            recognition.interimResults = true;  // 중간 결과 표시
+            recognition.lang = 'ko-KR';  // 한국어
+            recognition.maxAlternatives = 1;  // 대안 결과 1개
+            
+            recognition.onstart = function() {
+                console.log('✅ 음성 인식이 시작되었습니다');
+                showUpdateIndicator('음성 인식이 시작되었습니다');
+            };
+            
+            recognition.onresult = handleSpeechResult;
+            recognition.onerror = handleSpeechError;
+            recognition.onend = handleSpeechEnd;
+            
+            console.log('✅ 음성 인식 초기화 완료');
+            return true;
+        }
+        
+        // 음성 인식 결과 처리
+        function handleSpeechResult(event) {
+            console.log('음성 인식 이벤트 발생:', event);
+            
+            if (!event.results || event.results.length === 0) {
+                console.log('음성 인식 결과가 없습니다');
+                return;
+            }
+            
+            const current = event.resultIndex;
+            const transcript = event.results[current][0].transcript;
+            
+            console.log('인식된 텍스트:', transcript, 'Final:', event.results[current].isFinal);
+            
+            if (event.results[current].isFinal) {
+                console.log('최종 인식 결과:', transcript);
+                if (isMeetingRecording) {
+                    processMeetingTranscript(transcript);
+                } else if (isVoiceMemoRecording) {
+                    processVoiceMemo(transcript);
+                }
+            } else {
+                // 중간 결과 표시
+                if (isMeetingRecording) {
+                    updateMeetingStatus(`듣는 중: ${transcript}`);
+                    // 중간 결과도 화면에 표시
+                    showInterimTranscript(transcript);
+                } else if (isVoiceMemoRecording) {
+                    updateVoiceMemoStatus(`듣는 중: ${transcript}`);
+                }
+            }
+        }
+        
+        // 중간 결과 표시 함수
+        function showInterimTranscript(text) {
+            const transcriptBox = document.getElementById('transcriptBox');
+            
+            // 초기 메시지 제거
+            if (transcriptBox.querySelector('p')) {
+                transcriptBox.innerHTML = '';
+            }
+            
+            // 임시 텍스트 표시 또는 업데이트
+            let interimDiv = document.getElementById('interimTranscript');
+            if (!interimDiv) {
+                interimDiv = document.createElement('div');
+                interimDiv.id = 'interimTranscript';
+                interimDiv.style.opacity = '0.6';
+                interimDiv.style.fontStyle = 'italic';
+                interimDiv.className = 'transcript-item';
+                transcriptBox.appendChild(interimDiv);
+            }
+            
+            interimDiv.innerHTML = `
+                <div class="transcript-time">${new Date().toLocaleTimeString('ko-KR')}</div>
+                <div class="transcript-speaker">${currentUser.name} (인식 중...)</div>
+                <div class="transcript-text">${text}</div>
+            `;
+        }
+        
+        // 회의록 처리
+        function processMeetingTranscript(transcript) {
+            console.log('회의록 처리 시작:', transcript);
+            
+            // 임시 텍스트 제거
+            const interimDiv = document.getElementById('interimTranscript');
+            if (interimDiv) {
+                interimDiv.remove();
+            }
+            
+            const timestamp = new Date().toLocaleTimeString('ko-KR');
+            
+            // 회의록에 추가
+            const transcriptItem = {
+                time: timestamp,
+                speaker: currentSpeaker || currentUser.name,
+                text: transcript,
+                keywords: extractKeywords(transcript)
+            };
+            
+            if (!sessionData.voiceTranscripts) {
+                sessionData.voiceTranscripts = [];
+            }
+            sessionData.voiceTranscripts.push(transcriptItem);
+            
+            // UI 업데이트
+            addTranscriptToUI(transcriptItem);
+            
+            // AI 분석
+            analyzeTranscript(transcript);
+            
+            // 세션 저장
+            saveSession();
+            
+            // 성공 피드백
+            showUpdateIndicator('음성이 인식되어 회의록에 추가되었습니다');
+        }
+        
+        // 음성 메모 처리
+        function processVoiceMemo(transcript) {
+            console.log('음성 메모 인식:', transcript);
+            
+            // AI 분석으로 위험성평가 자동 생성
+            const analysis = analyzeRiskFromVoice(transcript);
+            
+            if (analysis) {
+                // 폼에 자동 입력
+                document.getElementById('wtLocation').value = analysis.location || '';
+                document.getElementById('wtContent').value = analysis.work || '';
+                document.getElementById('wtDanger').value = analysis.danger || '';
+                document.getElementById('wtImprovement').value = analysis.improvement || '';
+                
+                // 위험도 자동 설정
+                if (analysis.frequency) {
+                    document.getElementById('wtFrequency').value = analysis.frequency;
+                }
+                if (analysis.severity) {
+                    document.getElementById('wtSeverity').value = analysis.severity;
+                }
+                
+                showUpdateIndicator('음성 메모가 위험성평가로 변환되었습니다');
+            }
+            
+            updateVoiceMemoStatus(`인식 완료: "${transcript}"`);
+        }
+        
+        // 음성에서 위험성평가 분석
+        function analyzeRiskFromVoice(text) {
+            const analysis = {
+                location: '',
+                work: '',
+                danger: '',
+                improvement: '',
+                frequency: null,
+                severity: null
+            };
+            
+            // 장소 추출
+            const locationMatch = text.match(/(\d+층|지하|옥상|[가-힣]+실|[가-힣]+장|[가-힣]+소)/);
+            if (locationMatch) {
+                analysis.location = locationMatch[0];
+            }
+            
+            // 작업 내용 추출
+            const workKeywords = SAFETY_KEYWORDS.work;
+            for (const keyword of workKeywords) {
+                if (text.includes(keyword)) {
+                    const workMatch = text.match(new RegExp(`([가-힣\\s]+${keyword}[가-힣\\s]*)`));
+                    if (workMatch) {
+                        analysis.work = workMatch[0].trim();
+                        break;
+                    }
+                }
+            }
+            
+            // 위험 요인 추출
+            const dangerKeywords = SAFETY_KEYWORDS.danger;
+            for (const keyword of dangerKeywords) {
+                if (text.includes(keyword)) {
+                    analysis.danger = keyword + ' 위험';
+                    
+                    // 위험 중대성 자동 설정
+                    if (['추락', '감전', '폭발', '붕괴'].includes(keyword)) {
+                        analysis.severity = 4; // 사망 가능
+                    } else if (['충돌', '협착', '화재'].includes(keyword)) {
+                        analysis.severity = 3; // 중상
+                    } else {
+                        analysis.severity = 2; // 경상
+                    }
+                    break;
+                }
+            }
+            
+            // 개선 대책 추출
+            const ppeKeywords = SAFETY_KEYWORDS.ppe;
+            const improvements = [];
+            for (const keyword of ppeKeywords) {
+                if (text.includes(keyword)) {
+                    improvements.push(keyword + ' 착용');
+                }
+            }
+            
+            const actionKeywords = SAFETY_KEYWORDS.action;
+            for (const keyword of actionKeywords) {
+                if (text.includes(keyword)) {
+                    const actionMatch = text.match(new RegExp(`([가-힣\\s]*${keyword}[가-힣\\s]*)`));
+                    if (actionMatch) {
+                        improvements.push(actionMatch[0].trim());
+                    }
+                }
+            }
+            
+            if (improvements.length > 0) {
+                analysis.improvement = improvements.join(', ');
+            }
+            
+            // 작업 빈도 추측 (기본값)
+            analysis.frequency = 3; // 월 1-2회 기본값
+            
+            return analysis;
+        }
+        
+        // 키워드 추출
+        function extractKeywords(text) {
+            const keywords = [];
+            
+            for (const category in SAFETY_KEYWORDS) {
+                for (const keyword of SAFETY_KEYWORDS[category]) {
+                    if (text.includes(keyword)) {
+                        keywords.push(keyword);
+                    }
+                }
+            }
+            
+            return keywords;
+        }
+        
+        // 회의록 UI 추가
+        function addTranscriptToUI(item) {
+            const transcriptBox = document.getElementById('transcriptBox');
+            
+            // 초기 메시지 제거
+            if (transcriptBox.querySelector('p')) {
+                transcriptBox.innerHTML = '';
+            }
+            
+            const transcriptDiv = document.createElement('div');
+            transcriptDiv.className = 'transcript-item';
+            
+            let highlightedText = item.text;
+            item.keywords.forEach(keyword => {
+                highlightedText = highlightedText.replace(
+                    new RegExp(keyword, 'g'),
+                    `<span class="keyword-highlight">${keyword}</span>`
+                );
+            });
+            
+            transcriptDiv.innerHTML = `
+                <div class="transcript-time">${item.time}</div>
+                <div class="transcript-speaker">${item.speaker}</div>
+                <div class="transcript-text">${highlightedText}</div>
+            `;
+            
+            transcriptBox.appendChild(transcriptDiv);
+            transcriptBox.scrollTop = transcriptBox.scrollHeight;
+        }
+        
+        // AI 분석
+        function analyzeTranscript(text) {
+            const aiBox = document.getElementById('aiAnalysisBox');
+            
+            // 초기 메시지 제거
+            if (aiBox.querySelector('p')) {
+                aiBox.innerHTML = '<h4>🤖 AI 분석 결과</h4>';
+            }
+            
+            const analysis = {
+                dangers: [],
+                works: [],
+                ppes: [],
+                actions: []
+            };
+            
+            // 위험 요인 분석
+            SAFETY_KEYWORDS.danger.forEach(keyword => {
+                if (text.includes(keyword)) {
+                    analysis.dangers.push(keyword);
+                }
+            });
+            
+            // 작업 내용 분석
+            SAFETY_KEYWORDS.work.forEach(keyword => {
+                if (text.includes(keyword)) {
+                    analysis.works.push(keyword);
+                }
+            });
+            
+            // 보호구 분석
+            SAFETY_KEYWORDS.ppe.forEach(keyword => {
+                if (text.includes(keyword)) {
+                    analysis.ppes.push(keyword);
+                }
+            });
+            
+            // 조치사항 분석
+            SAFETY_KEYWORDS.action.forEach(keyword => {
+                if (text.includes(keyword)) {
+                    analysis.actions.push(keyword);
+                }
+            });
+            
+            // 분석 결과 표시
+            if (analysis.dangers.length > 0) {
+                addAnalysisItem(aiBox, '위험요인', analysis.dangers.join(', '));
+            }
+            if (analysis.works.length > 0) {
+                addAnalysisItem(aiBox, '작업내용', analysis.works.join(', '));
+            }
+            if (analysis.ppes.length > 0) {
+                addAnalysisItem(aiBox, '필요보호구', analysis.ppes.join(', '));
+            }
+            if (analysis.actions.length > 0) {
+                addAnalysisItem(aiBox, '조치사항', analysis.actions.join(', '));
+            }
+        }
+        
+        // 분석 항목 추가
+        function addAnalysisItem(container, label, value) {
+            const item = document.createElement('div');
+            item.className = 'ai-analysis-item';
+            item.innerHTML = `
+                <span class="ai-analysis-label">${label}:</span>
+                <span>${value}</span>
+            `;
+            container.appendChild(item);
+        }
+        
+        // 회의 녹음 토글
+        async function toggleMeetingRecording() {
+            if (!recognition && !initializeSpeechRecognition()) {
+                return;
+            }
+            
+            const btn = document.getElementById('meetingRecordBtn');
+            
+            if (!isMeetingRecording) {
+                try {
+                    // 먼저 권한 상태 확인
+                    if (navigator.permissions && navigator.permissions.query) {
+                        const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+                        console.log('마이크 권한 상태:', permissionStatus.state);
+                        
+                        if (permissionStatus.state === 'denied') {
+                            alert('마이크 권한이 차단되어 있습니다.\n\n📱 해결 방법:\n1. 핸드폰 설정 앱 열기\n2. 앱 → Chrome → 권한\n3. 마이크 켜기\n\n또는 시크릿 모드에서 다시 시도해보세요!');
+                            return;
+                        }
+                    }
+                    
+                    // 마이크 권한 요청 (이 부분에서 팝업이 나타나야 함)
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        } 
+                    });
+                    
+                    // 스트림 정리 (권한만 확인하고 실제 녹음은 음성인식 API가 처리)
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // 녹음 시작
+                    isMeetingRecording = true;
+                    meetingStartTime = new Date();
+                    btn.classList.add('recording');
+                    btn.innerHTML = '<span>⏹️</span> 녹음 중지';
+                    updateMeetingStatus('🎤 녹음 중... (말씀해주세요)');
+                    
+                    // 음성 인식 시작
+                    recognition.start();
+                    console.log('음성 인식 시작됨');
+                    
+                    // 사용자에게 안내
+                    showUpdateIndicator('마이크가 활성화되었습니다. 말씀해주세요.');
+                } catch (error) {
+                    console.error('마이크 접근 오류:', error);
+                    
+                    // 더 친절한 오류 메시지
+                    let errorMsg = '마이크 접근 오류:\n\n';
+                    
+                    if (error.name === 'NotAllowedError') {
+                        errorMsg += '📱 권한이 차단되었습니다.\n\n';
+                        errorMsg += '해결 방법:\n';
+                        errorMsg += '1. Chrome 시크릿 모드에서 다시 시도\n';
+                        errorMsg += '2. 또는 핸드폰 설정 → 앱 → Chrome → 권한 → 마이크 ON';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMsg += '마이크를 찾을 수 없습니다.\n';
+                        errorMsg += '이어폰을 연결하거나 마이크 연결을 확인하세요.';
+                    } else {
+                        errorMsg += error.message;
+                    }
+                    
+                    alert(errorMsg);
+                    updateMeetingStatus('마이크 사용 불가');
+                }
+            } else {
+                // 녹음 중지
+                isMeetingRecording = false;
+                btn.classList.remove('recording');
+                btn.innerHTML = '<span>🎙️</span> 회의 녹음 시작';
+                updateMeetingStatus('녹음 완료');
+                
+                recognition.stop();
+                console.log('음성 인식 중지됨');
+                
+                // 임시 텍스트 제거
+                const interimDiv = document.getElementById('interimTranscript');
+                if (interimDiv) {
+                    interimDiv.remove();
+                }
+            }
+        }
+        
+        // 음성 메모 토글
+        async function toggleVoiceMemo() {
+            if (!recognition && !initializeSpeechRecognition()) {
+                return;
+            }
+            
+            const btn = document.getElementById('voiceMemoBtn');
+            
+            if (!isVoiceMemoRecording) {
+                try {
+                    // 먼저 권한 상태 확인
+                    if (navigator.permissions && navigator.permissions.query) {
+                        const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+                        console.log('마이크 권한 상태:', permissionStatus.state);
+                        
+                        if (permissionStatus.state === 'denied') {
+                            alert('마이크 권한이 차단되어 있습니다.\n\n📱 해결 방법:\n1. 핸드폰 설정 앱 열기\n2. 앱 → Chrome → 권한\n3. 마이크 켜기\n\n또는 시크릿 모드에서 다시 시도해보세요!');
+                            return;
+                        }
+                    }
+                    
+                    // 마이크 권한 요청
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        } 
+                    });
+                    
+                    // 스트림 정리
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // 녹음 시작
+                    isVoiceMemoRecording = true;
+                    btn.classList.add('recording');
+                    btn.innerHTML = '<span>⏹️</span> 녹음 중지';
+                    updateVoiceMemoStatus('말씀해주세요...');
+                    
+                    recognition.start();
+                    console.log('음성 메모 시작됨');
+                    
+                    showUpdateIndicator('음성 메모가 시작되었습니다. 위험 상황을 설명해주세요.');
+                } catch (error) {
+                    console.error('마이크 접근 오류:', error);
+                    
+                    let errorMsg = '마이크 접근 오류:\n\n';
+                    
+                    if (error.name === 'NotAllowedError') {
+                        errorMsg += '📱 권한이 차단되었습니다.\n\n';
+                        errorMsg += '해결 방법:\n';
+                        errorMsg += '1. Chrome 시크릿 모드에서 다시 시도\n';
+                        errorMsg += '2. 또는 핸드폰 설정 → 앱 → Chrome → 권한 → 마이크 ON';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMsg += '마이크를 찾을 수 없습니다.\n';
+                        errorMsg += '이어폰을 연결하거나 마이크 연결을 확인하세요.';
+                    } else {
+                        errorMsg += error.message;
+                    }
+                    
+                    alert(errorMsg);
+                    updateVoiceMemoStatus('마이크 사용 불가');
+                }
+            } else {
+                // 녹음 중지
+                isVoiceMemoRecording = false;
+                btn.classList.remove('recording');
+                btn.innerHTML = '<span>🎤</span> 음성 메모 시작';
+                updateVoiceMemoStatus('녹음 완료');
+                
+                recognition.stop();
+                console.log('음성 메모 중지됨');
+            }
+        }
+        
+        // 음성 인식 오류 처리
+        function handleSpeechError(event) {
+            console.error('음성 인식 오류:', event.error);
+            
+            let errorMessage = '음성 인식 오류: ';
+            switch(event.error) {
+                case 'no-speech':
+                    errorMessage += '음성이 감지되지 않았습니다. 마이크 가까이에서 말씀해주세요.';
+                    // 자동 재시작
+                    if (isMeetingRecording || isVoiceMemoRecording) {
+                        setTimeout(() => {
+                            recognition.start();
+                            console.log('음성 인식 재시작');
+                        }, 1000);
+                    }
+                    break;
+                case 'audio-capture':
+                    errorMessage += '마이크를 찾을 수 없습니다. 마이크 연결을 확인해주세요.';
+                    break;
+                case 'not-allowed':
+                    errorMessage += '마이크 권한이 거부되었습니다. 브라우저 설정에서 허용해주세요.';
+                    // 녹음 중지
+                    if (isMeetingRecording) {
+                        toggleMeetingRecording();
+                    }
+                    if (isVoiceMemoRecording) {
+                        toggleVoiceMemo();
+                    }
+                    break;
+                case 'aborted':
+                    errorMessage += '다른 앱이 마이크를 사용 중입니다.';
+                    break;
+                case 'network':
+                    errorMessage += '네트워크 오류입니다. 인터넷 연결을 확인해주세요.';
+                    break;
+                default:
+                    errorMessage += event.error;
+            }
+            
+            if (isMeetingRecording) {
+                updateMeetingStatus(errorMessage);
+            } else if (isVoiceMemoRecording) {
+                updateVoiceMemoStatus(errorMessage);
+            }
+            
+            showUpdateIndicator(errorMessage);
+        }
+        
+        // 음성 인식 종료 처리
+        function handleSpeechEnd() {
+            console.log('음성 인식 종료 이벤트 발생');
+            
+            if (isMeetingRecording || isVoiceMemoRecording) {
+                // 계속 녹음 중이면 재시작
+                console.log('녹음 중이므로 음성 인식 재시작...');
+                setTimeout(() => {
+                    try {
+                        recognition.start();
+                        console.log('음성 인식 재시작됨');
+                    } catch (e) {
+                        console.error('음성 인식 재시작 실패:', e);
+                    }
+                }, 500);
+            }
+        }
+        
+        // 상태 업데이트 함수들
+        function updateMeetingStatus(message) {
+            const statusEl = document.getElementById('meetingStatus');
+            statusEl.textContent = message;
+            
+            // 상태에 따라 색상 변경
+            if (message.includes('녹음 중')) {
+                statusEl.style.color = '#28a745';
+                statusEl.style.fontWeight = 'bold';
+            } else if (message.includes('오류') || message.includes('차단')) {
+                statusEl.style.color = '#dc3545';
+            } else {
+                statusEl.style.color = '#333';
+                statusEl.style.fontWeight = 'normal';
+            }
+        }
+        
+        function updateVoiceMemoStatus(message) {
+            const statusEl = document.getElementById('voiceMemoStatus');
+            statusEl.textContent = message;
+            
+            // 상태에 따라 색상 변경
+            if (message.includes('듣는 중')) {
+                statusEl.style.color = '#28a745';
+            } else if (message.includes('오류') || message.includes('차단')) {
+                statusEl.style.color = '#dc3545';
+            } else {
+                statusEl.style.color = '#666';
+            }
+        }
+        
+        // 세션 코드 생성
+        function generateSessionCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+        
+        // 세션 데이터 저장 (개선된 버전)
+        function saveSession() {
+            try {
+                isSyncing = true;
+                updateSyncStatus('syncing');
+                
+                // 버전 증가
+                sessionData.version = (sessionData.version || 0) + 1;
+                sessionData.lastUpdated = new Date().toISOString();
+                sessionData.lastUpdatedBy = currentUser ? currentUser.name : 'Unknown';
+                
+                const sessions = getSavedSessions();
+                sessions[sessionData.sessionCode] = sessionData;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+                
+                if (debugMode) {
+                    console.log('세션 저장됨:', {
+                        version: sessionData.version,
+                        worktalkCount: sessionData.worktalkData.length,
+                        voiceTranscriptsCount: sessionData.voiceTranscripts ? sessionData.voiceTranscripts.length : 0,
+                        lastUpdatedBy: sessionData.lastUpdatedBy
+                    });
+                }
+                
+                setTimeout(() => {
+                    isSyncing = false;
+                    updateSyncStatus('synced');
+                }, 500);
+                
+                return true;
+            } catch (error) {
+                console.error('세션 저장 오류:', error);
+                updateSyncStatus('error');
+                return false;
+            }
+        }
+        
+        // 저장된 세션 가져오기
+        function getSavedSessions() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : {};
+        }
+        
+        // 동기화 상태 업데이트
+        function updateSyncStatus(status) {
+            const statusElement = document.getElementById('syncStatus');
+            if (!statusElement) return;
+            
+            statusElement.className = `sync-status ${status}`;
+            
+            switch(status) {
+                case 'syncing':
+                    statusElement.innerHTML = '<span>⟳</span> 동기화 중...';
+                    break;
+                case 'synced':
+                    statusElement.innerHTML = '<span>●</span> 동기화됨';
+                    break;
+                case 'error':
+                    statusElement.innerHTML = '<span>⚠</span> 동기화 오류';
+                    break;
+            }
+        }
+        
+        // 수동 동기화
+        function manualSync() {
+            console.log('수동 동기화 시작');
+            
+            const sessions = getSavedSessions();
+            if (sessions[sessionData.sessionCode]) {
+                const serverData = sessions[sessionData.sessionCode];
+                
+                // 버전 비교로 최신 데이터 확인
+                if (serverData.version > sessionData.version) {
+                    console.log('서버에 새로운 데이터 발견');
+                    sessionData = serverData;
+                    updateUI();
+                    showUpdateIndicator('데이터가 동기화되었습니다');
+                } else {
+                    showUpdateIndicator('이미 최신 데이터입니다');
+                }
+            }
+            
+            // 위험요인 테이블 강제 업데이트
+            setTimeout(() => {
+                updateRiskTable();
+            }, 100);
+        }
+        
+        // 강제 테이블 업데이트
+        function forceUpdateRiskTable() {
+            console.log('테이블 강제 업데이트 시작');
+            
+            // 먼저 최신 데이터 동기화
+            manualSync();
+            
+            // 테이블 업데이트
+            setTimeout(() => {
+                updateRiskTable();
+                updateWorktalkCards();
+                updateWorktalkCount();
+                showUpdateIndicator('테이블이 업데이트되었습니다');
+            }, 200);
+        }
+        
+        // 로그인 처리 함수
+        function handleLogin() {
+            console.log('로그인 버튼 클릭');
+            
+            const userName = document.getElementById('userName').value.trim();
+            let sessionCode = document.getElementById('sessionCode').value.trim();
+            
+            if (!userName) {
+                alert('이름을 입력해주세요.');
+                return;
+            }
+            
+            // 새 세션 생성 또는 기존 세션 참여
+            if (!sessionCode) {
+                sessionCode = generateSessionCode();
+                sessionData.sessionCode = sessionCode;
+                sessionData.users = [];
+                sessionData.tbmData = {
+                    date: new Date().toISOString().split('T')[0],
+                    time: new Date().toTimeString().split(' ')[0].substring(0, 5)
+                };
+                sessionData.worktalkData = [];
+                sessionData.signatures = {};
+                sessionData.voiceTranscripts = [];
+                sessionData.version = 0;
+                console.log('새 세션 생성:', sessionCode);
+            } else {
+                // 기존 세션 로드
+                const savedSessions = getSavedSessions();
+                if (savedSessions[sessionCode]) {
+                    sessionData = savedSessions[sessionCode];
+                    console.log('기존 세션 로드:', sessionCode, '버전:', sessionData.version);
+                } else {
+                    alert('존재하지 않는 세션 코드입니다.');
+                    return;
+                }
+            }
+            
+            // 사용자 추가
+            currentUser = {
+                name: userName,
+                id: Date.now().toString(),
+                joinedAt: new Date().toISOString()
+            };
+            
+            // 중복 사용자 확인
+            const existingUser = sessionData.users.find(u => u.name === userName);
+            if (existingUser) {
+                currentUser = existingUser;
+            } else {
+                sessionData.users.push(currentUser);
+            }
+            
+            // 세션 저장
+            saveSession();
+            
+            // 화면 전환
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            
+            console.log('로그인 성공:', currentUser);
+            
+            // UI 업데이트
+            updateUI();
+            startAutoSync();
+            initializeEventListeners();
+            
+            // 음성 인식 초기화
+            console.log('음성 인식 초기화 시도...');
+            if (initializeSpeechRecognition()) {
+                console.log('✅ 음성 인식 준비 완료');
+            } else {
+                console.log('❌ 음성 인식 초기화 실패');
+            }
+            
+            // 초기 위험요인 테이블 업데이트
+            setTimeout(() => {
+                updateRiskTable();
+                updateWorktalkCount();
+            }, 500);
+        }
+        
+        // UI 업데이트
+        function updateUI() {
+            // 세션 코드 표시
+            document.getElementById('currentSessionCode').textContent = sessionData.sessionCode;
+            
+            // 온라인 사용자 표시
+            const onlineUsersDiv = document.getElementById('onlineUsers');
+            onlineUsersDiv.innerHTML = '<span>참여자:</span>';
+            sessionData.users.forEach(user => {
+                const avatar = document.createElement('div');
+                avatar.className = 'user-avatar';
+                avatar.textContent = user.name.substring(0, 2);
+                avatar.title = user.name;
+                onlineUsersDiv.appendChild(avatar);
+            });
+            
+            // 참석자 목록 업데이트
+            updateAttendeesList();
+            
+            // WorkTalk 카드 업데이트
+            updateWorktalkCards();
+            
+            // 위험요인 테이블 업데이트
+            updateRiskTable();
+            
+            // WorkTalk 개수 업데이트
+            updateWorktalkCount();
+            
+            // TBM 데이터 로드
+            if (sessionData.tbmData) {
+                document.getElementById('tbmDate').value = sessionData.tbmData.date || '';
+                document.getElementById('tbmTime').value = sessionData.tbmData.time || '';
+                document.getElementById('tbmLocation').value = sessionData.tbmData.location || '';
+                document.getElementById('department').value = sessionData.tbmData.department || '';
+                document.getElementById('tbmLeader').value = sessionData.tbmData.leader || '';
+                document.getElementById('workLocation').value = sessionData.tbmData.workLocation || '';
+                document.getElementById('workContent').value = sessionData.tbmData.workContent || '';
+                document.getElementById('preparation').value = sessionData.tbmData.preparation || '';
+                document.getElementById('precautions').value = sessionData.tbmData.precautions || '';
+                
+                // 보호구 체크박스 업데이트
+                if (sessionData.tbmData.ppe) {
+                    document.querySelectorAll('input[name="ppe"]').forEach(checkbox => {
+                        checkbox.checked = sessionData.tbmData.ppe.includes(checkbox.value);
+                    });
+                }
+                document.getElementById('otherPpe').value = sessionData.tbmData.otherPpe || '';
+            }
+            
+            // 리더 이름 표시 업데이트
+            updateLeaderDisplay();
+            
+            // 리더 서명 표시
+            const leaderCanvas = document.getElementById('leaderSignatureCanvas');
+            if (leaderCanvas && sessionData.signatures && sessionData.signatures.leader) {
+                const ctx = leaderCanvas.getContext('2d');
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0, 0, leaderCanvas.width, leaderCanvas.height);
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, leaderCanvas.width, leaderCanvas.height);
+                    ctx.drawImage(img, 0, 0, leaderCanvas.width, leaderCanvas.height);
+                };
+                img.src = sessionData.signatures.leader;
+            }
+            
+            // 음성 회의록 업데이트
+            if (sessionData.voiceTranscripts && sessionData.voiceTranscripts.length > 0) {
+                const transcriptBox = document.getElementById('transcriptBox');
+                transcriptBox.innerHTML = '';
+                sessionData.voiceTranscripts.forEach(item => {
+                    addTranscriptToUI(item);
+                });
+            }
+        }
+        
+        // WorkTalk 개수 업데이트
+        function updateWorktalkCount() {
+            const countElement = document.getElementById('worktalkCount');
+            if (countElement) {
+                countElement.textContent = sessionData.worktalkData ? sessionData.worktalkData.length : 0;
+            }
+        }
+        
+        // 리더 이름 표시 업데이트 함수
+        function updateLeaderDisplay() {
+            const leaderNameSpan = document.getElementById('currentLeaderName');
+            if (leaderNameSpan && sessionData.tbmData && sessionData.tbmData.leader) {
+                leaderNameSpan.textContent = sessionData.tbmData.leader;
+                leaderNameSpan.style.color = '#ff6600';
+            } else if (leaderNameSpan) {
+                leaderNameSpan.textContent = '미지정';
+                leaderNameSpan.style.color = '#999';
+            }
+        }
+        
+        // 참석자 목록 업데이트
+        function updateAttendeesList() {
+            const tbody = document.getElementById('attendeesList');
+            tbody.innerHTML = '';
+            
+            sessionData.users.forEach(user => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td><span class="user-avatar" style="width: 20px; height: 20px; font-size: 10px;">${user.name.substring(0, 2)}</span></td>
+                    <td>
+                        ${sessionData.signatures[user.id] ? 
+                            '<span class="signature-status signed">서명완료</span>' : 
+                            `<button class="btn btn-primary" onclick="openSignatureModal('${user.id}')">서명하기</button>`
+                        }
+                    </td>
+                `;
+            });
+        }
+        
+        // WorkTalk 카드 업데이트
+        function updateWorktalkCards() {
+            const container = document.getElementById('worktalkCards');
+            container.innerHTML = '';
+            
+            if (!sessionData.worktalkData || sessionData.worktalkData.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999;">등록된 위험성평가가 없습니다.</p>';
+                return;
+            }
+            
+            sessionData.worktalkData.forEach((item, index) => {
+                const riskScore = item.frequency * item.severity;
+                let riskLevel = 'low';
+                if (riskScore >= 12) riskLevel = 'high';
+                else if (riskScore >= 6) riskLevel = 'medium';
+                
+                const card = document.createElement('div');
+                card.className = 'worktalk-card';
+                if (item.isVoiceGenerated) {
+                    card.className += ' voice-generated';
+                }
+                
+                card.innerHTML = `
+                    ${item.isVoiceGenerated ? '<span class="voice-badge">🎤 음성</span>' : ''}
+                    <span class="card-author">${item.author}</span>
+                    <div class="card-photo">
+                        ${item.photo ? `<img src="${item.photo}" alt="현장사진">` : '<span>사진 없음</span>'}
+                    </div>
+                    <h4>${item.location}</h4>
+                    <p><strong>작업내용:</strong> ${item.content}</p>
+                    <p><strong>위험요인:</strong> ${item.danger}</p>
+                    <p><strong>개선대책:</strong> ${item.improvement}</p>
+                    <div style="margin-top: 10px;">
+                        <span class="risk-badge ${riskLevel}">위험도: ${riskScore}점</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // 위험요인 테이블 업데이트 (개선된 버전)
+        function updateRiskTable() {
+            console.log('=== updateRiskTable 시작 ===');
+            const tbody = document.getElementById('riskTableBody');
+            
+            if (!tbody) {
+                console.error('❌ riskTableBody를 찾을 수 없습니다');
+                return;
+            }
+            
+            // 테이블 초기화
+            tbody.innerHTML = '';
+            console.log('✅ 테이블 초기화 완료');
+            
+            // worktalkData 확인
+            if (!sessionData.worktalkData || sessionData.worktalkData.length === 0) {
+                console.log('⚠️ worktalkData가 없거나 비어있습니다');
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">등록된 위험성평가가 없습니다.</td></tr>';
+                updateDebugInfo();
+                return;
+            }
+            
+            console.log(`📊 위험성평가 데이터 개수: ${sessionData.worktalkData.length}`);
+            
+            // 각 위험성평가 항목을 테이블에 추가
+            sessionData.worktalkData.forEach((item, index) => {
+                try {
+                    console.log(`🔄 행 ${index + 1} 처리 중...`);
+                    console.log('항목 데이터:', item);
+                    
+                    const row = tbody.insertRow();
+                    
+                    // 위험도 계산
+                    const frequency = parseInt(item.frequency) || 0;
+                    const severity = parseInt(item.severity) || 0;
+                    const riskScore = frequency * severity;
+                    
+                    let riskGrade = '';
+                    let riskClass = '';
+                    
+                    if (riskScore >= 12) {
+                        riskGrade = '상';
+                        riskClass = 'high';
+                    } else if (riskScore >= 6) {
+                        riskGrade = '중';
+                        riskClass = 'medium';
+                    } else {
+                        riskGrade = '하';
+                        riskClass = 'low';
+                    }
+                    
+                    const frequencyText = ['', '년 1-2회', '분기 1회', '월 1-2회', '주 1-2회', '매일'][frequency] || '';
+                    const severityText = ['', '아차사고', '경상-통원치료', '중상-입원필요', '사망 또는 장애성 중상'][severity] || '';
+                    
+                    // 테이블 행 내용 설정
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${item.location || ''}</td>
+                        <td>${item.content || ''}</td>
+                        <td>${item.danger || ''}</td>
+                        <td>${frequencyText}</td>
+                        <td>${severityText}</td>
+                        <td><span class="risk-badge ${riskClass}">${riskGrade} (${riskScore}점)</span></td>
+                        <td>${item.improvement || ''}</td>
+                    `;
+                    
+                    console.log(`✅ 행 ${index + 1} 추가 완료`);
+                } catch (error) {
+                    console.error(`❌ 행 ${index + 1} 추가 중 오류:`, error);
+                }
+            });
+            
+            console.log('=== updateRiskTable 완료 ===');
+            console.log('최종 테이블 행 수:', tbody.rows.length);
+            
+            updateDebugInfo();
+        }
+        
+        // 디버그 정보 업데이트
+        function updateDebugInfo() {
+            if (!debugMode) return;
+            
+            const debugDiv = document.getElementById('debugInfo');
+            const info = `
+                <strong>디버그 정보:</strong><br>
+                세션코드: ${sessionData.sessionCode}<br>
+                버전: ${sessionData.version || 0}<br>
+                사용자수: ${sessionData.users.length}<br>
+                위험성평가수: ${sessionData.worktalkData ? sessionData.worktalkData.length : 0}<br>
+                음성회의록수: ${sessionData.voiceTranscripts ? sessionData.voiceTranscripts.length : 0}<br>
+                테이블 행수: ${document.getElementById('riskTableBody').rows.length}<br>
+                마지막 업데이트: ${sessionData.lastUpdated || 'N/A'}<br>
+                업데이트한 사람: ${sessionData.lastUpdatedBy || 'N/A'}<br>
+                현재 시간: ${new Date().toLocaleTimeString()}
+            `;
+            debugDiv.innerHTML = info;
+        }
+        
+        // 디버그 정보 토글
+        function toggleDebugInfo() {
+            debugMode = !debugMode;
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.classList.toggle('show');
+            updateDebugInfo();
+        }
+        
+        // 탭 전환 (수정된 버전)
+        function switchTab(tabName, event) {
+            // 모든 탭 비활성화
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 선택한 탭 활성화
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // TBM 탭으로 전환 시 위험요인 테이블 업데이트
+            if (tabName === 'tbm') {
+                console.log('TBM 탭으로 전환 - 위험요인 테이블 업데이트');
+                setTimeout(() => {
+                    updateRiskTable();
+                }, 100);
+            }
+            
+            // WorkTalk 탭으로 전환 시 개수 업데이트
+            if (tabName === 'worktalk') {
+                updateWorktalkCount();
+            }
+        }
+        
+        // 이벤트 리스너 초기화 함수
+        function initializeEventListeners() {
+            // WorkTalk 폼 제출
+            const worktalkForm = document.getElementById('worktalkForm');
+            if (worktalkForm) {
+                worktalkForm.addEventListener('submit', handleWorktalkSubmit);
+            }
+            
+            // 사진 미리보기
+            const wtPhoto = document.getElementById('wtPhoto');
+            if (wtPhoto) {
+                wtPhoto.addEventListener('change', handlePhotoPreview);
+            }
+            
+            // TBM 데이터 자동 저장
+            ['tbmDate', 'tbmTime', 'tbmLocation', 'department', 'tbmLeader', 'workLocation', 'workContent', 'preparation', 'precautions', 'otherPpe'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', function() {
+                        if (!sessionData.tbmData) sessionData.tbmData = {};
+                        const key = id.replace('tbm', '').charAt(0).toLowerCase() + id.replace('tbm', '').slice(1);
+                        sessionData.tbmData[key] = this.value;
+                        
+                        // 리더가 변경되면 리더 이름 업데이트
+                        if (id === 'tbmLeader') {
+                            updateLeaderDisplay();
+                        }
+                        
+                        saveSession();
+                    });
+                }
+            });
+            
+            // 보호구 체크박스 자동 저장
+            document.querySelectorAll('input[name="ppe"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    if (!sessionData.tbmData) sessionData.tbmData = {};
+                    if (!sessionData.tbmData.ppe) sessionData.tbmData.ppe = [];
+                    
+                    const checkedPpe = [];
+                    document.querySelectorAll('input[name="ppe"]:checked').forEach(cb => {
+                        checkedPpe.push(cb.value);
+                    });
+                    sessionData.tbmData.ppe = checkedPpe;
+                    saveSession();
+                });
+            });
+            
+            // 초기 날짜/시간 설정
+            const now = new Date();
+            document.getElementById('tbmDate').value = sessionData.tbmData.date || now.toISOString().split('T')[0];
+            document.getElementById('tbmTime').value = sessionData.tbmData.time || now.toTimeString().split(' ')[0].substring(0, 5);
+            
+            // 리더 서명 캔버스 설정
+            const leaderCanvas = document.getElementById('leaderSignatureCanvas');
+            if (leaderCanvas) {
+                leaderCanvas.width = leaderCanvas.offsetWidth;
+                leaderCanvas.height = leaderCanvas.offsetHeight;
+                
+                // 배경색 설정
+                const ctx = leaderCanvas.getContext('2d');
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, leaderCanvas.width, leaderCanvas.height);
+                
+                // 리더 서명이 있으면 표시
+                if (sessionData.signatures && sessionData.signatures.leader) {
+                    const img = new Image();
+                    img.onload = function() {
+                        ctx.drawImage(img, 0, 0, leaderCanvas.width, leaderCanvas.height);
+                    };
+                    img.src = sessionData.signatures.leader;
+                }
+            }
+        }
+        
+        // WorkTalk 폼 제출 핸들러 (수정된 버전)
+        function handleWorktalkSubmit(e) {
+            e.preventDefault();
+            console.log('WorkTalk 폼 제출 시작');
+            
+            // 폼 데이터 수집
+            const location = document.getElementById('wtLocation').value;
+            const content = document.getElementById('wtContent').value;
+            const danger = document.getElementById('wtDanger').value;
+            const frequency = document.getElementById('wtFrequency').value;
+            const severity = document.getElementById('wtSeverity').value;
+            const improvement = document.getElementById('wtImprovement').value;
+            
+            // 필수 필드 확인
+            if (!location || !content || !danger || !frequency || !severity || !improvement) {
+                alert('모든 필드를 입력해주세요.');
+                return;
+            }
+            
+            const worktalkItem = {
+                id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9),
+                author: currentUser.name,
+                location: location,
+                content: content,
+                danger: danger,
+                frequency: parseInt(frequency),
+                severity: parseInt(severity),
+                improvement: improvement,
+                photo: null,
+                isVoiceGenerated: false,
+                createdAt: new Date().toISOString()
+            };
+            
+            console.log('생성된 WorkTalk 항목:', worktalkItem);
+            
+            // 사진 처리
+            const photoInput = document.getElementById('wtPhoto');
+            if (photoInput.files && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    worktalkItem.photo = e.target.result;
+                    
+                    // 데이터 추가
+                    if (!sessionData.worktalkData) {
+                        sessionData.worktalkData = [];
+                    }
+                    
+                    sessionData.worktalkData.push(worktalkItem);
+                    console.log('WorkTalk 데이터 추가됨 (사진 포함):', sessionData.worktalkData.length + '건');
+                    
+                    // 저장 및 업데이트
+                    saveSession();
+                    
+                    // 즉시 UI 업데이트
+                    updateWorktalkCards();
+                    updateRiskTable();
+                    
+                    // 지연 실행으로 한 번 더 업데이트
+                    setTimeout(() => {
+                        updateRiskTable();
+                        showUpdateIndicator('위험성평가가 추가되었습니다 (총 ' + sessionData.worktalkData.length + '건)');
+                    }, 100);
+                    
+                    // 폼 초기화
+                    document.getElementById('worktalkForm').reset();
+                    document.getElementById('photoPreview').innerHTML = '<span>사진을 선택하세요</span>';
+                };
+                reader.readAsDataURL(photoInput.files[0]);
+            } else {
+                // 사진 없이 데이터 추가
+                if (!sessionData.worktalkData) {
+                    sessionData.worktalkData = [];
+                }
+                
+                sessionData.worktalkData.push(worktalkItem);
+                console.log('WorkTalk 데이터 추가됨 (사진 없음):', sessionData.worktalkData.length + '건');
+                
+                // 저장 및 업데이트
+                saveSession();
+                
+                // 즉시 UI 업데이트
+                updateWorktalkCards();
+                updateRiskTable();
+                
+                // 지연 실행으로 한 번 더 업데이트
+                setTimeout(() => {
+                    updateRiskTable();
+                    showUpdateIndicator('위험성평가가 추가되었습니다 (총 ' + sessionData.worktalkData.length + '건)');
+                }, 100);
+                
+                // 폼 초기화
+                document.getElementById('worktalkForm').reset();
+                document.getElementById('photoPreview').innerHTML = '<span>사진을 선택하세요</span>';
+            }
+        }
+        
+        // 사진 미리보기 핸들러
+        function handlePhotoPreview(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('photoPreview').innerHTML = `<img src="${e.target.result}" alt="미리보기">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // 서명 모달
+        let signatureUserId = null;
+        let signatureCanvas = null;
+        let signatureCtx = null;
+        let isDrawing = false;
+        
+        function openSignatureModal(userId) {
+            if (userId !== currentUser.id && userId !== 'leader') {
+                alert('본인의 서명만 할 수 있습니다.');
+                return;
+            }
+            
+            signatureUserId = userId;
+            document.getElementById('signatureModal').style.display = 'flex';
+            
+            // 캔버스 초기화
+            signatureCanvas = document.getElementById('signatureCanvas');
+            signatureCtx = signatureCanvas.getContext('2d');
+            signatureCanvas.width = signatureCanvas.offsetWidth;
+            signatureCanvas.height = signatureCanvas.offsetHeight;
+            
+            // 배경색 설정
+            signatureCtx.fillStyle = 'white';
+            signatureCtx.fillRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+            
+            // 선 스타일 설정
+            signatureCtx.lineWidth = 2;
+            signatureCtx.strokeStyle = '#000';
+            signatureCtx.lineCap = 'round';
+            
+            // 기존 이벤트 리스너 제거
+            signatureCanvas.removeEventListener('mousedown', startDrawing);
+            signatureCanvas.removeEventListener('touchstart', startDrawing);
+            signatureCanvas.removeEventListener('mousemove', draw);
+            signatureCanvas.removeEventListener('touchmove', draw);
+            signatureCanvas.removeEventListener('mouseup', stopDrawing);
+            signatureCanvas.removeEventListener('touchend', stopDrawing);
+            signatureCanvas.removeEventListener('mouseout', stopDrawing);
+            
+            // 터치/마우스 이벤트 설정
+            signatureCanvas.addEventListener('mousedown', startDrawing);
+            signatureCanvas.addEventListener('touchstart', startDrawing);
+            signatureCanvas.addEventListener('mousemove', draw);
+            signatureCanvas.addEventListener('touchmove', draw);
+            signatureCanvas.addEventListener('mouseup', stopDrawing);
+            signatureCanvas.addEventListener('touchend', stopDrawing);
+            signatureCanvas.addEventListener('mouseout', stopDrawing);
+        }
+        
+        function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const rect = signatureCanvas.getBoundingClientRect();
+            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+            signatureCtx.beginPath();
+            signatureCtx.moveTo(x, y);
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const rect = signatureCanvas.getBoundingClientRect();
+            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+            signatureCtx.lineTo(x, y);
+            signatureCtx.stroke();
+        }
+        
+        function stopDrawing() {
+            isDrawing = false;
+        }
+        
+        function saveSignature() {
+            const dataURL = signatureCanvas.toDataURL();
+            sessionData.signatures[signatureUserId] = dataURL;
+            saveSession();
+            updateUI();
+            closeSignatureModal();
+            showUpdateIndicator('서명이 저장되었습니다');
+            
+            // 리더 서명인 경우 캔버스에도 표시
+            if (signatureUserId === 'leader') {
+                const leaderCanvas = document.getElementById('leaderSignatureCanvas');
+                const img = new Image();
+                img.onload = function() {
+                    const ctx = leaderCanvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, leaderCanvas.width, leaderCanvas.height);
+                };
+                img.src = dataURL;
+            }
+        }
+        
+        function clearSignature() {
+            signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+            signatureCtx.fillStyle = 'white';
+            signatureCtx.fillRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+        }
+        
+        function closeSignatureModal() {
+            document.getElementById('signatureModal').style.display = 'none';
+        }
+        
+        // 업데이트 표시
+        function showUpdateIndicator(message) {
+            const indicator = document.getElementById('updateIndicator');
+            document.getElementById('updateMessage').textContent = message;
+            indicator.style.display = 'block';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 자동 동기화
+        function startAutoSync() {
+            console.log('자동 동기화 시작');
+            
+            // 초기 위험요인 테이블 업데이트
+            setTimeout(() => {
+                console.log('초기 테이블 업데이트 시도');
+                updateRiskTable();
+            }, 500);
+            
+            // 정기적인 동기화
+            setInterval(() => {
+                const sessions = getSavedSessions();
+                if (sessions[sessionData.sessionCode]) {
+                    const serverData = sessions[sessionData.sessionCode];
+                    
+                    // 새로운 데이터가 있는지 확인
+                    const hasNewData = JSON.stringify(serverData) !== JSON.stringify(sessionData);
+                    
+                    if (hasNewData) {
+                        console.log('새로운 데이터 감지됨');
+                        sessionData = serverData;
+                        updateUI();
+                        showUpdateIndicator('데이터가 동기화되었습니다');
+                    }
+                }
+            }, 3000); // 3초마다 동기화
+        }
+        
+        // Excel 내보내기 (음성 회의록 추가)
+        async function exportToExcel() {
+            // 날짜 포맷
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            const timeStr = today.toTimeString().split(' ')[0];
+            
+            // CSV 초기화
+            let csv = '';
+            
+            // 헤더 행 생성
+            let headers = [];
+            headers.push('세션코드', 'TBM실시일', '실시시간', '실시장소', '부서팀', 'TBM리더', '작업장소', '작업내용', '작업전준비사항', '작업중주의사항');
+            
+            // 보호구 필드들
+            headers.push('안전모', '안전화', '안전장갑', '보안경', '방진마스크', '귀마개', '안전대', '기타보호구');
+            
+            // 참석자 필드들 (최대 20명까지)
+            for (let i = 1; i <= 20; i++) {
+                headers.push(`참석자${i}이름`, `참석자${i}서명`);
+            }
+            
+            // 위험성평가 필드들
+            headers.push('위험작성자', '위험작업장소', '위험작업내용', '위험요인', '작업빈도', '위험중대성', '위험도점수', '위험등급', '개선대책', '음성입력여부');
+            
+            // 음성 회의록 필드
+            headers.push('회의록시간', '회의록발언자', '회의록내용', '회의록키워드');
+            
+            // 요약 정보
+            headers.push('총참석자수', '서명완료수', '위험성평가건수', '음성회의록건수', '고위험건수', '중위험건수', '저위험건수');
+            headers.push('데이터생성일시');
+            
+            csv += headers.join(',') + '\n';
+            
+            // 가장 많은 행 수 결정 (위험성평가와 음성회의록 중 더 많은 것)
+            const riskCount = sessionData.worktalkData.length;
+            const transcriptCount = sessionData.voiceTranscripts ? sessionData.voiceTranscripts.length : 0;
+            const rowCount = Math.max(1, riskCount, transcriptCount);
+            
+            for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+                let dataRow = [];
+                
+                // 기본 정보 (모든 행에 동일하게 반복)
+                dataRow.push(sessionData.sessionCode);
+                dataRow.push(sessionData.tbmData.date || '');
+                dataRow.push(sessionData.tbmData.time || '');
+                dataRow.push(`"${sessionData.tbmData.location || ''}"`);
+                dataRow.push(`"${sessionData.tbmData.department || ''}"`);
+                dataRow.push(`"${sessionData.tbmData.leader || ''}"`);
+                dataRow.push(`"${sessionData.tbmData.workLocation || ''}"`);
+                dataRow.push(`"${(sessionData.tbmData.workContent || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`);
+                dataRow.push(`"${(sessionData.tbmData.preparation || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`);
+                dataRow.push(`"${(sessionData.tbmData.precautions || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`);
+                
+                // 보호구 정보 (모든 행에 동일하게 반복)
+                const ppeItems = ['안전모', '안전화', '안전장갑', '보안경', '방진마스크', '귀마개', '안전대'];
+                ppeItems.forEach(item => {
+                    dataRow.push((sessionData.tbmData.ppe || []).includes(item) ? 'O' : 'X');
+                });
+                dataRow.push(`"${sessionData.tbmData.otherPpe || ''}"`);
+                
+                // 참석자 정보 (모든 행에 동일하게 반복, 최대 20명)
+                for (let i = 0; i < 20; i++) {
+                    if (i < sessionData.users.length) {
+                        const user = sessionData.users[i];
+                        dataRow.push(user.name);
+                        dataRow.push(sessionData.signatures[user.id] ? 'O' : 'X');
+                    } else {
+                        dataRow.push('', '');
+                    }
+                }
+                
+                // 위험성평가 정보 (각 행마다 다른 위험성평가)
+                if (rowIndex < sessionData.worktalkData.length) {
+                    const item = sessionData.worktalkData[rowIndex];
+                    const riskScore = item.frequency * item.severity;
+                    let riskGrade = '하';
+                    if (riskScore >= 12) riskGrade = '상';
+                    else if (riskScore >= 6) riskGrade = '중';
+                    
+                    const frequencyText = ['', '년1-2회', '분기1회', '월1-2회', '주1-2회', '매일'][item.frequency] || '';
+                    const severityText = ['', '아차사고', '경상', '중상', '사망'][item.severity] || '';
+                    
+                    dataRow.push(item.author);
+                    dataRow.push(`"${item.location}"`);
+                    dataRow.push(`"${item.content.replace(/"/g, '""').replace(/\n/g, ' ')}"`);
+                    dataRow.push(`"${item.danger.replace(/"/g, '""').replace(/\n/g, ' ')}"`);
+                    dataRow.push(frequencyText);
+                    dataRow.push(severityText);
+                    dataRow.push(riskScore);
+                    dataRow.push(riskGrade);
+                    dataRow.push(`"${item.improvement.replace(/"/g, '""').replace(/\n/g, ' ')}"`);
+                    dataRow.push(item.isVoiceGenerated ? 'O' : 'X');
+                } else {
+                    // 위험성평가가 없는 경우 빈 필드
+                    dataRow.push('', '', '', '', '', '', '', '', '', '');
+                }
+                
+                // 음성 회의록 정보
+                if (sessionData.voiceTranscripts && rowIndex < sessionData.voiceTranscripts.length) {
+                    const transcript = sessionData.voiceTranscripts[rowIndex];
+                    dataRow.push(transcript.time);
+                    dataRow.push(transcript.speaker);
+                    dataRow.push(`"${transcript.text.replace(/"/g, '""')}"`);
+                    dataRow.push(`"${transcript.keywords.join(', ')}"`);
+                } else {
+                    dataRow.push('', '', '', '');
+                }
+                
+                // 요약 정보 (첫 번째 행에만 표시, 나머지는 빈 값)
+                if (rowIndex === 0) {
+                    dataRow.push(sessionData.users.length);
+                    dataRow.push(sessionData.users.filter(u => sessionData.signatures[u.id]).length);
+                    dataRow.push(sessionData.worktalkData.length);
+                    dataRow.push(sessionData.voiceTranscripts ? sessionData.voiceTranscripts.length : 0);
+                    
+                    const highRisk = sessionData.worktalkData.filter(item => (item.frequency * item.severity) >= 12).length;
+                    const mediumRisk = sessionData.worktalkData.filter(item => {
+                        const score = item.frequency * item.severity;
+                        return score >= 6 && score < 12;
+                    }).length;
+                    const lowRisk = sessionData.worktalkData.filter(item => (item.frequency * item.severity) < 6).length;
+                    
+                    dataRow.push(highRisk);
+                    dataRow.push(mediumRisk);
+                    dataRow.push(lowRisk);
+                    dataRow.push(`"${today.toLocaleString('ko-KR')}"`);
+                } else {
+                    dataRow.push('', '', '', '', '', '', '', '');
+                }
+                
+                csv += dataRow.join(',') + '\n';
+            }
+            
+            // BOM 추가하여 한글 깨짐 방지
+            const BOM = '\uFEFF';
+            const csvContent = BOM + csv;
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            
+            // 파일명
+            const fileName = `TBM_${sessionData.sessionCode}_${dateStr}.csv`;
+            
+            // 1. 로컬에 다운로드
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+            
+            // 2. 로컬 서버로 전송 (서버가 실행 중인 경우)
+            try {
+                // FormData 생성
+                const formData = new FormData();
+                formData.append('file', blob, fileName);
+                formData.append('sessionCode', sessionData.sessionCode);
+                formData.append('date', dateStr);
+                formData.append('time', timeStr);
+                formData.append('department', sessionData.tbmData.department || '');
+                formData.append('leader', sessionData.tbmData.leader || '');
+                formData.append('userCount', sessionData.users.length.toString());
+                formData.append('riskCount', sessionData.worktalkData.length.toString());
+                formData.append('transcriptCount', (sessionData.voiceTranscripts ? sessionData.voiceTranscripts.length : 0).toString());
+                
+                // 로컬 서버 URL
+                const SERVER_URL = 'http://localhost:3000/api/tbm/upload';
+                
+                // 서버로 전송
+                const response = await fetch(SERVER_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showUpdateIndicator('Excel 파일이 다운로드되고 서버에 저장되었습니다!');
+                    console.log('서버 저장 성공:', result);
+                } else {
+                    throw new Error('서버 응답 오류');
+                }
+            } catch (error) {
+                // 서버가 실행되지 않았거나 오류가 있는 경우
+                console.log('서버 저장 시도 실패 (서버가 실행 중이 아닐 수 있음):', error);
+                showUpdateIndicator('Excel 파일이 다운로드되었습니다');
+            }
+        }
+        
+        // 인쇄
+        function printDocument() {
+            // 인쇄 시 TBM 탭만 표시되도록 설정
+            window.print();
+            
+            // 인쇄 완료 알림
+            setTimeout(() => {
+                showUpdateIndicator('PDF 인쇄/저장 대화상자가 열렸습니다');
+            }, 100);
+        }
+        
+        // 로그아웃
+        function logout() {
+            if (confirm('정말 나가시겠습니까?')) {
+                // 음성 인식 중지
+                if (recognition && (isMeetingRecording || isVoiceMemoRecording)) {
+                    recognition.stop();
+                }
+                location.reload();
+            }
+        }
+        
+        // 마이크 테스트 함수
+        async function testMicrophone() {
+            console.log('마이크 테스트 시작');
+            
+            try {
+                // 1. 권한 상태 확인
+                if (navigator.permissions && navigator.permissions.query) {
+                    try {
+                        const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+                        console.log('권한 상태:', permissionStatus.state);
+                        alert(`현재 마이크 권한 상태: ${permissionStatus.state}\n\n` +
+                              `- prompt: 권한 요청 가능\n` +
+                              `- granted: 허용됨\n` +
+                              `- denied: 차단됨`);
+                    } catch (e) {
+                        console.log('권한 확인 불가:', e);
+                    }
+                }
+                
+                // 2. 마이크 접근 시도
+                alert('이제 마이크 권한을 요청합니다.\n팝업이 나타나면 "허용"을 선택하세요.');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: true 
+                });
+                
+                // 성공!
+                alert('✅ 마이크 권한이 허용되었습니다!\n이제 음성 기능을 사용할 수 있습니다.');
+                
+                // 스트림 정리
+                stream.getTracks().forEach(track => track.stop());
+                
+            } catch (error) {
+                console.error('마이크 테스트 실패:', error);
+                
+                let solution = '❌ 마이크 접근 실패\n\n';
+                
+                if (error.name === 'NotAllowedError') {
+                    solution += '📱 모바일 해결 방법:\n\n';
+                    solution += '방법 1 (가장 쉬움):\n';
+                    solution += '1. Chrome 시크릿 모드로 이 페이지 열기\n';
+                    solution += '2. 다시 마이크 테스트\n\n';
+                    solution += '방법 2:\n';
+                    solution += '1. 핸드폰 설정 앱\n';
+                    solution += '2. 앱 (또는 애플리케이션)\n';
+                    solution += '3. Chrome 찾기\n';
+                    solution += '4. 권한\n';
+                    solution += '5. 마이크 켜기';
+                } else if (error.name === 'NotFoundError') {
+                    solution += '마이크가 없거나 연결되지 않았습니다.\n';
+                    solution += '이어폰을 연결해보세요.';
+                } else {
+                    solution += `오류: ${error.name}\n${error.message}`;
+                }
+                
+                alert(solution);
+            }
+        }
+        
+        // 리더 서명 관련 함수 추가
+        function openLeaderSignatureModal() {
+            const leader = sessionData.tbmData.leader;
+            
+            if (!leader) {
+                alert('먼저 TBM 리더를 지정해주세요.');
+                return;
+            }
+            
+            if (leader !== currentUser.name) {
+                alert(`TBM 리더(${leader})만 서명할 수 있습니다.\n현재 사용자: ${currentUser.name}`);
+                return;
+            }
+            
+            console.log('리더 서명 모달 열기 - 리더:', leader, '현재 사용자:', currentUser.name);
+            openSignatureModal('leader');
+        }
+        
+        function clearLeaderSignature() {
+            const leader = sessionData.tbmData.leader;
+            
+            if (!leader || leader !== currentUser.name) {
+                alert('TBM 리더만 서명을 지울 수 있습니다.');
+                return;
+            }
+            
+            const canvas = document.getElementById('leaderSignatureCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (sessionData.signatures) {
+                delete sessionData.signatures.leader;
+                saveSession();
+                updateUI();
+                showUpdateIndicator('리더 서명이 삭제되었습니다');
+            }
+        }
+    </script>
+</body>
+</html>
